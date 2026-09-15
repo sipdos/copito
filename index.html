@@ -74,8 +74,6 @@ a{color:var(--accent2)}
 .scroll-down{position:absolute;bottom:90px;right:28px;width:44px;height:44px;border-radius:50%;background:var(--accent);color:#fff;font-size:20px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(124,92,255,.4);z-index:40;transition:opacity .3s,transform .3s}
 .scroll-down:hover{background:#6b4bef;transform:scale(1.08)}
 .scroll-down.oculto{opacity:0;pointer-events:none;transform:translateY(14px)}
-.stop-big{position:absolute;bottom:90px;right:84px;width:46px;height:46px;border-radius:50%;background:var(--err);color:#fff;font-size:18px;display:none;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(255,92,108,.45);z-index:41}
-.stop-big:hover{filter:brightness(1.15)}
 .thinkwrap{display:flex;align-items:center;gap:8px;font-size:12px;margin:2px 0 6px}
 .thinkwrap .tdots i{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--accent2);margin-right:3px;animation:tbounce 1s infinite}
 .thinkwrap .tdots i:nth-child(2){animation-delay:.15s}
@@ -148,7 +146,6 @@ body.light .chat-item.active{background:rgba(106,72,255,.12)}
   .inputwrap{flex-wrap:wrap}
   #inp{min-height:44px}
   .scroll-down{bottom:100px;right:16px;width:40px;height:40px;font-size:18px}
-  .stop-big{bottom:100px;right:66px;width:40px;height:40px}
   .sidebar-toggle{display:flex}
 }
 @media(max-width:600px){
@@ -176,9 +173,11 @@ body.light .chat-item.active{background:rgba(106,72,255,.12)}
     <label style="font-size:12px;color:var(--dim)">Modelo:<select id="modelSel" style="margin-left:6px;max-width:310px"></select></label>
     <button id="ggufLocalBtn" title="Cargar GGUF local" style="padding:6px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;font-size:13px">📂</button>
     <input type="file" id="ggufLocalInput" accept=".gguf,application/octet-stream" style="display:none">
+    <button id="memoryBtn" title="Ver memoria del chat" style="padding:6px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;font-size:13px">🧠</button>
+    <button id="webvmBtn" title="Abrir entorno Linux WebVM" style="padding:6px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;font-size:13px">🐧</button>
+    <button id="frankBtn" class="iconbtn" title="Modo franco: respuestas directas, sin rodeos ni moralina" style="color:var(--warn)">🔒</button>
     <button id="wizardBtn" title="Rehacer configuración inicial" style="padding:6px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;font-size:13px">🧙</button>
     <button id="themeBtn" title="Cambiar tema" style="padding:6px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;font-size:13px">🌙</button>
-	<button id="memoryBtn" title="Ver memoria del chat" style="padding:6px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;font-size:13px">🧠</button>
     <button id="configBtn" style="padding:6px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;font-size:13px">⚙️ Ruteo</button>
   </div>
   <div class="body">
@@ -194,7 +193,7 @@ body.light .chat-item.active{background:rgba(106,72,255,.12)}
         <div class="inputwrap">
           <input type="file" id="fileInp" accept="image/*,.pdf,.txt,.md,.js,.ts,.json,.py,.html,.css,.csv,.doc,.docx,.xls,.xlsx,.ppt,.pptx" style="display:none" multiple>
           <button id="attachBtn" class="iconbtn" style="width:auto;padding:0 12px;font-size:13px;gap:6px" title="Adjuntar imagen, texto, Word, Excel, PowerPoint o PDF">📎 Adjuntar</button>
-		  <button id="exportBtn" class="iconbtn" style="width:auto;padding:0 12px;font-size:13px" title="Exportar conversación">⬇ Exportar</button>
+          <button id="exportBtn" class="iconbtn" style="width:auto;padding:0 12px;font-size:13px" title="Exportar conversación">⬇ Exportar</button>
           <button id="searchBtn" class="iconbtn" title="Activar búsqueda en internet (DDG)" style="color:var(--accent2)">🔍</button>
           <textarea id="inp" rows="1" placeholder="Escribe un mensaje… (Enter = enviar, Shift+Enter = salto de línea)"></textarea>
           <button id="stop" title="Detener generación">⏹</button>
@@ -225,14 +224,14 @@ body.light .chat-item.active{background:rgba(106,72,255,.12)}
         <button id="wizardSkip" class="testbtn">⏭ Omitir por ahora</button>
       </div>
     </div>
-    <div class="help" style="margin-bottom:14px"><b>Zero-config real:</b> Pollinations + AI Horde sin key. <b>Wllama</b> corre un GGUF local en WebAssembly (con visión si cargas su mmproj). Los demás proveedores piden keys gratuitas oficiales. El selector <b>Auto</b> rota proveedor+modelo, detecta cupos agotados y compacta la sesión para continuar. <b>Atajos:</b> Esc cierra · Ctrl+S guarda.</div>
+    <div class="help" style="margin-bottom:14px"><b>Zero-config real:</b> Pollinations + AI Horde sin key. <b>Wllama</b> corre un GGUF local en WebAssembly (CPU, GPU o Split; con visión si cargas su mmproj). Los demás proveedores piden keys gratuitas oficiales. El selector <b>Auto</b> rota proveedor+modelo, detecta cupos agotados y compacta la sesión para continuar. <b>Atajos:</b> Esc cierra · Ctrl+S guarda.</div>
     <div id="providersList"></div>
     <div style="margin-top:10px"><button id="addEndpoint" style="width:100%;padding:8px;background:rgba(0,200,180,.12);border:1px solid var(--accent2);border-radius:8px;color:var(--accent2)">+ Añadir endpoint OpenAI-compatible</button></div>
     <div class="form-group" style="margin-top:14px">
       <label>Preferencias</label>
       <div class="row-3">
         <div class="form-group" style="margin:0"><label>Estrategia de ruteo</label><select id="strategySel" style="width:100%"><option value="priority">priority — keyless primero</option><option value="round-robin">round-robin</option><option value="least-used">least-used</option><option value="random">random</option></select></div>
-        <div class="form-group" style="margin:0"><label>Contexto total (n_ctx)</label><input type="number" id="ctxMax" style="width:100%" min="500" step="500" value="8000"></div>
+        <div class="form-group" style="margin:0"><label>Contexto total (n_ctx)</label><input type="number" id="ctxMax" style="width:100%" min="1024" step="512" value="4096"></div>
         <div class="form-group" style="margin:0"><label>Modelo por defecto</label><select id="defModelSel" style="width:100%"></select></div>
       </div>
       <div class="row-2" style="margin-top:10px">
@@ -251,6 +250,39 @@ body.light .chat-item.active{background:rgba(106,72,255,.12)}
   </div>
 </div>
 
+<div class="modal-bg" id="memoryBg">
+  <div class="modal" style="max-width:800px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <h2 style="margin:0">🧠 Memoria del chat</h2>
+      <button onclick="document.getElementById('memoryBg').classList.remove('open')" style="font-size:20px;color:var(--dim)">✕</button>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+      <button class="testbtn" onclick="memoryView('md')">Markdown</button>
+      <button class="testbtn" onclick="memoryView('json')">JSON crudo</button>
+      <button class="testbtn" onclick="memoryExport('md')">⬇ Descargar .md</button>
+      <button class="testbtn" onclick="memoryExport('json')">⬇ Descargar .json</button>
+    </div>
+    <textarea id="memoryOut" readonly style="width:100%;height:60vh;background:var(--bg);color:var(--txt);font-family:ui-monospace,monospace;font-size:12px"></textarea>
+  </div>
+</div>
+
+<div id="webvmPanel" style="display:none;position:fixed;inset:0;z-index:120;background:var(--bg);flex-direction:column">
+  <div style="display:flex;align-items:center;gap:10px;padding:8px 14px;background:var(--bg2);border-bottom:1px solid var(--border)">
+    <b style="font-size:14px">🐧 Entorno Linux (WebVM · CheerpX · Debian)</b>
+    <span style="font-size:11px;color:var(--dim)">Tarda ~30-60 s en arrancar la primera vez · Requiere internet</span>
+    <div style="flex:1"></div>
+    <button class="testbtn" onclick="window.open('https://webvm.io','_blank')">↗ Abrir en pestaña</button>
+    <button class="testbtn" style="border-color:var(--err);color:var(--err)" onclick="document.getElementById('webvmPanel').style.display='none'">✕ Cerrar</button>
+  </div>
+  <iframe id="webvmFrame" src="about:blank" style="flex:1;border:none;background:#000" allow="cross-origin-isolated"></iframe>
+</div>
+
+<div id="termWrap" style="position:fixed;right:16px;bottom:140px;z-index:80;width:440px;max-width:92vw;display:none">
+  <button id="termToggle" style="width:100%;text-align:left;padding:6px 12px;background:var(--bg2);border:1px solid var(--border);border-radius:10px 10px 0 0;color:var(--accent2);font-size:12px">🐧 Terminal del agente ▸</button>
+  <div id="termBody" style="display:none;background:#0b0e15;border:1px solid var(--border);border-top:none;border-radius:0 0 10px 10px;max-height:280px;overflow-y:auto;padding:10px">
+    <pre id="termLog" style="font-family:ui-monospace,monospace;font-size:11px;color:#c3e88d;white-space:pre-wrap;margin:0"></pre>
+  </div>
+</div>
 <script>
 'use strict';
 const COOKIE_CFG='copito_config';
@@ -270,7 +302,7 @@ const DEFAULT_CFG={
   providers:[
     {id:'pollinations',name:'Pollinations (sin key)',kind:'remote',format:'openai',enabled:true,base:'https://text.pollinations.ai/openai',model:'openai-fast',key:'',ctx:9000,timeout:120000,keyless:true,headers:{'X-Referer':'https://copito.local'},models:['openai-fast','openai','gpt-oss-20b','mistral','llama'],note:'Sin key. CORS abierto. Principal para zero-config.'},
     {id:'aihorde',name:'AI Horde (sin key, reserva)',kind:'remote',format:'aihorde',enabled:true,base:'https://aihorde.net/api/v2/generate/text',model:'',key:'0000000000',ctx:4000,timeout:240000,keyless:true,models:['NousResearch/Nous-Hermes-2-Mixtral-8x7B-DPO','KoboldAI/LLaMA2-13B-Tiefighter','teknium/OpenHermes-2.5-Mistral-7B','microsoft/phi-3-mini-128k'],note:'Sin key real usando token anónimo. Puede ser lento por cola comunitaria.'},
-    {id:'wllama',name:'Wllama local (GGUF en navegador)',kind:'local',format:'wllama',enabled:true,base:'',model:'',key:'',wrepo:'bartowski/Llama-3.2-3B-Instruct-GGUF',wfile:'Llama-3.2-3B-Instruct-Q4_K_M.gguf',wurl:'',wmmproj:'',wllamaDevice:'auto',ctx:4096,timeout:300000,keyless:true,models:[],note:'Endpoint local: carga un GGUF desde archivo, carpeta modelos/ o HuggingFace. Visión si cargas su mmproj. Sin key ni servidor.'},
+    {id:'wllama',name:'Wllama local (GGUF en navegador)',kind:'local',format:'wllama',enabled:true,base:'',model:'',key:'',wrepo:'bartowski/Llama-3.2-3B-Instruct-GGUF',wfile:'Llama-3.2-3B-Instruct-Q4_K_M.gguf',wurl:'',wmmproj:'',wllamaDevice:'auto',wngl:8,wthr:0,ctx:4096,timeout:300000,keyless:true,models:[],note:'Endpoint local: carga un GGUF desde archivo, carpeta modelos/ o HuggingFace. CPU/GPU/Split. Visión si cargas su mmproj. Sin key ni servidor.'},
     {id:'groq',name:'Groq (key gratis)',kind:'remote',format:'openai',enabled:false,base:'https://api.groq.com/openai/v1/chat/completions',model:'llama-3.1-8b-instant',key:'',ctx:12000,timeout:60000,keyless:false,models:['llama-3.1-8b-instant','llama-3.3-70b-versatile','openai/gpt-oss-20b'],note:'Key gratuita oficial. Muy rápido.'},
     {id:'openrouter',name:'OpenRouter (key gratis)',kind:'remote',format:'openai',enabled:false,base:'https://openrouter.ai/api/v1/chat/completions',model:'meta-llama/llama-3.1-8b-instruct:free',key:'',ctx:5000,timeout:60000,keyless:false,headers:{'X-Title':'Copito'},models:['meta-llama/llama-3.1-8b-instruct:free','deepseek/deepseek-chat-v3-0324:free','qwen/qwen-2.5-7b-instruct:free'],note:'Key gratuita oficial. Usa modelos :free.'},
     {id:'gemini',name:'Google Gemini (key gratis)',kind:'remote',format:'gemini',enabled:false,base:'https://generativelanguage.googleapis.com',model:'gemini-1.5-flash',key:'',ctx:12000,timeout:60000,keyless:false,models:['gemini-1.5-flash','gemini-2.0-flash-exp'],note:'Key gratuita oficial en AI Studio. Soporta visión.'},
@@ -316,7 +348,7 @@ function pathFix(u){if(!u)return u;try{const ur=new URL(u);const before=ur.pathn
 function slimConfig(c){
   return {
     strategy:c.strategy,ctxMax:c.ctxMax,maxOut:c.maxOut,autoCompact:c.autoCompact,defModel:c.defModel,theme:c.theme,wizardDone:!!c.wizardDone,
-    providers:(c.providers||[]).map(p=>({id:p.id,name:p.name,kind:p.kind,format:p.format,enabled:!!p.enabled,base:p.base||'',model:p.model||'',key:p.key||'',ctx:p.ctx,timeout:p.timeout,keyless:!!p.keyless,headers:p.headers||{},modelsUrl:p.modelsUrl||'',wrepo:p.wrepo||'',wfile:p.wfile||'',wurl:p.wurl||'',wmmproj:p.wmmproj||'',wllamaDevice:p.wllamaDevice||'auto',note:p.note||''}))
+    providers:(c.providers||[]).map(p=>({id:p.id,name:p.name,kind:p.kind,format:p.format,enabled:!!p.enabled,base:p.base||'',model:p.model||'',key:p.key||'',ctx:p.ctx,timeout:p.timeout,keyless:!!p.keyless,headers:p.headers||{},modelsUrl:p.modelsUrl||'',wrepo:p.wrepo||'',wfile:p.wfile||'',wurl:p.wurl||'',wmmproj:p.wmmproj||'',wllamaDevice:p.wllamaDevice||'auto',wngl:p.wngl||8,wthr:p.wthr||0,note:p.note||''}))
   };
 }
 function saveCfgNow(){
@@ -342,7 +374,7 @@ function loadCfg(){
     if(rawObj.providers)c.providers=mergeProviders(rawObj.providers);
     if(rawObj.strategy)c.strategy=rawObj.strategy;
     if(rawObj.ctxMax)c.ctxMax=rawObj.ctxMax;
-	if(rawObj.maxOut)c.maxOut=rawObj.maxOut;
+    if(rawObj.maxOut)c.maxOut=rawObj.maxOut;
     if(typeof rawObj.autoCompact==='boolean')c.autoCompact=rawObj.autoCompact;
     if(rawObj.defModel)c.defModel=rawObj.defModel;
     if(rawObj.theme)c.theme=rawObj.theme;
@@ -366,6 +398,7 @@ const chatEl=$('chat'),inp=$('inp'),sendBtn=$('send'),stopBtn=$('stop'),spinner=
 let isBusy=false,stopCtrl=null,pendingFiles=[],chatStartTime=0,searchCache={},searchMode=false,searchCtrl=null;
 let stickToBottom=true;
 let stopBigBtn=null;
+let frankMode=false;
 
 function setStatus(t,err){statusEl.textContent=t;statusEl.style.color=err?'var(--err)':'var(--dim)';overlayHook(t,err);}
 function providerById(id){return cfg.providers.find(p=>p.id===id);}
@@ -389,13 +422,14 @@ function displayContent(content){
   }
   return JSON.stringify(content);
 }
-/* ===== Búsqueda web (5 fuentes, CORS-friendly, con diagnóstico) ===== */
+function isOnline(){ return navigator.onLine !== false; }
+
+/* ===== Búsqueda web multi-motor (Google + Bing + DDG; Wikipedia solo último recurso) ===== */
 async function webSearch(query, maxResults, signal){
   maxResults = maxResults || 5;
   const cacheKey = String(query).toLowerCase().trim();
   if(searchCache[cacheKey] && Date.now() - searchCache[cacheKey].ts < 300000) return searchCache[cacheKey].data;
   const q = encodeURIComponent(query);
-  const qClean = encodeURIComponent(String(query).replace(/[^\p{L}\p{N}\s-]/gu, '').trim());
   const mkSig = function(ms){
     const c = new AbortController();
     const t = setTimeout(function(){ c.abort(); }, ms);
@@ -406,104 +440,103 @@ async function webSearch(query, maxResults, signal){
     return { s:c.signal, stop:function(){ clearTimeout(t); } };
   };
   const get = async function(u, ms){
-    const g = mkSig(ms || 12000);
+    const g = mkSig(ms || 15000);
     try{ const r = await fetch(u, {signal:g.s}); g.stop(); return r; }
     catch(e){ g.stop(); throw e; }
   };
-  const diag = [];
-  const out = [];
+  const out = []; const diag = [];
+  const push = function(tag, title, extra){
+    const line = '[' + tag + '] ' + title + (extra ? ' — ' + extra : '');
+    if(line.length > 8 && out.indexOf(line) === -1) out.push(line);
+  };
 
-  // Fuente 1: Wikipedia ES (extracto de la mejor coincidencia)
+  // Motor 1: GOOGLE vía r.jina.ai (markdown legible, CORS abierto, sin key)
   try{
-    const r1 = await get('https://es.wikipedia.org/w/api.php?action=query&list=search&srsearch=' + qClean + '&srlimit=1&format=json&origin=*');
-    const d1 = await r1.json().catch(function(){ return null; });
-    const title = d1 && d1.query && d1.query.search && d1.query.search[0] && d1.query.search[0].title;
-    if(title){
-      const r2 = await get('https://es.wikipedia.org/w/api.php?action=query&prop=extracts&exintro&explaintext&titles=' + encodeURIComponent(title) + '&format=json&origin=*', 15000);
-      const d2 = await r2.json().catch(function(){ return null; });
-      const pg = d2 && d2.query && d2.query.pages && Object.values(d2.query.pages)[0];
-      if(pg && pg.extract){
-        out.push('[Wikipedia] ' + pg.title + ': ' + pg.extract.slice(0,1500));
-      }else{ diag.push('Wikipedia: sin extracto'); }
-    }else{ diag.push('Wikipedia: sin coincidencias'); }
-  }catch(e){ diag.push('Wikipedia: ' + (e.message || 'error')); }
-
-  // Fuente 2: Wikipedia ES (snippets múltiples)
-  try{
-    const r = await get('https://es.wikipedia.org/w/api.php?action=query&list=search&srsearch=' + qClean + '&srlimit=' + Math.min(maxResults, 5) + '&format=json&origin=*');
-    const d = await r.json();
-    const src = (d.query && d.query.search) || [];
-    for(const s of src){
-      const txt = s.title + ' — ' + String(s.snippet || '').replace(/<[^>]+>/g,'').replace(/&quot;/g,'"');
-      if(txt.length > 10 && out.indexOf(txt) === -1) out.push('[Wikipedia] ' + txt);
+    const r = await get('https://r.jina.ai/https://www.google.com/search?q=' + q + '&num=' + (maxResults*2), 20000);
+    const txt = await r.text();
+    const re = /\[([^\]\n]{8,140})\]\((https?:\/\/[^)\s]+)\)/g;
+    let m, n = 0;
+    while((m = re.exec(txt)) && n < maxResults){
+      const title = m[1].trim(), url = m[2];
+      if(/google\.|gstatic\.|accounts\.|maps\.google/i.test(url)) continue;
+      push('Google', title, url); n++;
     }
-    if(!src.length) diag.push('Wikipedia snippets: vacío');
-  }catch(e){ diag.push('Wikipedia snippets: ' + (e.message || 'error')); }
+    if(!n) diag.push('Google(jina): sin enlaces');
+  }catch(e){ diag.push('Google(jina): ' + (e.message || 'error')); }
 
-  // Fuente 3: DuckDuckGo Instant (queries tipo definición)
-  try{
-    const r = await get('https://api.duckduckgo.com/?q=' + q + '&format=json&no_html=1&skip_disambig=1');
-    const d = await r.json();
-    if(d.AbstractText) out.push('[DDG] ' + d.AbstractText);
-    const rel = d.RelatedTopics || [];
-    for(const t of rel){
-      if(t.Text) out.push('[DDG] ' + t.Text);
-      if(t.Topics) for(const s of t.Topics) if(s.Text) out.push('[DDG] ' + s.Text);
-      if(out.length >= maxResults * 2) break;
-    }
-    if(!d.AbstractText && (!rel || !rel.length)) diag.push('DDG Instant: vacío (normal en búsquedas coloquiales)');
-  }catch(e){ diag.push('DDG Instant: ' + (e.message || 'error')); }
-
-  // Fuente 4: Wikipedia EN (respaldo si ES no dio nada)
-  if(out.length < 2){
+  // Motor 2: BING vía r.jina.ai
+  if(out.length < maxResults){
     try{
-      const r = await get('https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=' + qClean + '&srlimit=' + Math.min(maxResults, 3) + '&format=json&origin=*');
-      const d = await r.json();
-      const src = (d.query && d.query.search) || [];
-      for(const s of src){
-        const txt = s.title + ' — ' + String(s.snippet || '').replace(/<[^>]+>/g,'').replace(/&quot;/g,'"');
-        if(txt.length > 10) out.push('[Wikipedia EN] ' + txt);
+      const r = await get('https://r.jina.ai/https://www.bing.com/search?q=' + q + '&count=' + (maxResults*2), 20000);
+      const txt = await r.text();
+      const re = /\[([^\]\n]{8,140})\]\((https?:\/\/[^)\s]+)\)/g;
+      let m, n = 0;
+      while((m = re.exec(txt)) && n < maxResults){
+        const title = m[1].trim(), url = m[2];
+        if(/bing\.|microsoft\.|live\.com/i.test(url)) continue;
+        push('Bing', title, url); n++;
       }
-    }catch(e){ diag.push('Wikipedia EN: ' + (e.message || 'error')); }
+      if(!n) diag.push('Bing(jina): sin enlaces');
+    }catch(e){ diag.push('Bing(jina): ' + (e.message || 'error')); }
   }
 
-  // Fuente 5: DuckDuckGo Lite HTML (parseado, funciona en CORS)
-  if(out.length < 2){
+  // Motor 3: BING HTML vía allorigins (parseo de .b_algo)
+  if(out.length < maxResults){
     try{
-      const r = await get('https://lite.duckduckgo.com/lite/?q=' + q, 15000);
-      const html = await r.text();
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(html, 'text/html');
-      const snippets = doc.querySelectorAll('td.result-snippet');
-      snippets.forEach(function(s, i){
-        if(i < maxResults) out.push('[DDG Lite] ' + s.textContent.trim());
-      });
-      if(!snippets.length) diag.push('DDG Lite: sin resultados');
-    }catch(e){ diag.push('DDG Lite: ' + (e.message || 'error')); }
-  }
-
-  // Fuente 6: DuckDuckGo HTML (resultados web reales, no solo enciclopedia)
-  if(out.length < 2){
-    try{
-      const r = await get('https://html.duckduckgo.com/html/?q=' + q, 15000);
-      const html = await r.text();
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(html, 'text/html');
-      const res = doc.querySelectorAll('.result__body, .result-snippet, #links .result__snippet');
-      res.forEach(function(s, i){
+      const r = await get('https://api.allorigins.win/get?url=' + encodeURIComponent('https://www.bing.com/search?q=' + q), 20000);
+      const j = await r.json();
+      const doc = new DOMParser().parseFromString(j.contents || '', 'text/html');
+      const algos = doc.querySelectorAll('li.b_algo');
+      algos.forEach(function(li, i){
         if(i < maxResults){
-          const t = s.textContent.trim();
-          if(t.length > 20) out.push('[Web] ' + t);
+          const h = li.querySelector('h2'); const p = li.querySelector('p');
+          if(h) push('Bing', h.textContent.trim(), p ? p.textContent.trim() : '');
         }
       });
-      if(!res.length) diag.push('DDG HTML: sin snippets');
-    }catch(e){ diag.push('DDG HTML: ' + (e.message || 'error')); }
+      if(!algos.length) diag.push('Bing(allorigins): sin .b_algo');
+    }catch(e){ diag.push('Bing(allorigins): ' + (e.message || 'error')); }
   }
 
-  if(!out.length){
-    console.warn('Búsqueda sin resultados. Diagnóstico:', diag);
-    return [];
+  // Motor 4: DuckDuckGo HTML vía allorigins
+  if(out.length < maxResults){
+    try{
+      const r = await get('https://api.allorigins.win/get?url=' + encodeURIComponent('https://html.duckduckgo.com/html/?q=' + q), 20000);
+      const j = await r.json();
+      const doc = new DOMParser().parseFromString(j.contents || '', 'text/html');
+      const res = doc.querySelectorAll('.result__body');
+      res.forEach(function(el, i){
+        if(i < maxResults){
+          const a = el.querySelector('a'); const s = el.querySelector('.result__snippet');
+          push('DDG', a ? a.textContent.trim() : '', s ? s.textContent.trim() : '');
+        }
+      });
+      if(!res.length) diag.push('DDG(allorigins): sin resultados');
+    }catch(e){ diag.push('DDG(allorigins): ' + (e.message || 'error')); }
   }
+
+  // Motor 5: DuckDuckGo Lite directo (sin proxy)
+  if(out.length < maxResults){
+    try{
+      const r = await get('https://lite.duckduckgo.com/lite/?q=' + q, 15000);
+      const doc = new DOMParser().parseFromString(await r.text(), 'text/html');
+      doc.querySelectorAll('td.result-snippet').forEach(function(s, i){
+        if(i < maxResults) push('DDG-Lite', s.textContent.trim(), '');
+      });
+    }catch(e){ diag.push('DDG-Lite: ' + (e.message || 'error')); }
+  }
+
+  // Último recurso (solo si TODO lo anterior falló): Wikipedia
+  if(!out.length){
+    try{
+      const r = await get('https://es.wikipedia.org/w/api.php?action=query&list=search&srsearch=' + q + '&srlimit=' + Math.min(maxResults,3) + '&format=json&origin=*');
+      const d = await r.json();
+      ((d.query && d.query.search) || []).forEach(function(s){
+        push('Wikipedia', s.title, String(s.snippet||'').replace(/<[^>]+>/g,''));
+      });
+    }catch(e){ diag.push('Wikipedia: ' + (e.message || 'error')); }
+  }
+
+  if(!out.length){ console.warn('Búsqueda sin resultados. Diagnóstico:', diag); return []; }
   const data = out.slice(0, maxResults);
   searchCache[cacheKey] = {data:data, ts:Date.now()};
   return data;
@@ -813,7 +846,7 @@ async function callAIHorde(p, messages, onDelta, signal, modelOverride){
       body:JSON.stringify({
         prompt:prompt,
         model:modelOverride || p.model || '',
-        params:{max_length:Math.min(1024, cfg.ctxMax), temperature:0.7, top_p:0.9, frequency_penalty:0.1}
+        params:{max_length:Math.min(1024, cfg.maxOut || 1024), temperature:0.7, top_p:0.9, frequency_penalty:0.1}
       }),
       signal:ctrl.signal
     });
@@ -848,7 +881,7 @@ async function callAIHorde(p, messages, onDelta, signal, modelOverride){
     if(signal) signal.removeEventListener('abort', onAbort);
   }
 }
-/* ===== Wllama: GGUF local (runtime, progreso, mmproj, visión, métricas, stop) ===== */
+/* ===== Wllama: GGUF local (runtime validado, Split GPU+CPU, watchdog, Blob sin SW) ===== */
 let wllamaInstance = null;
 let wllamaBlobUrls = [];
 let wllamaBase = null;
@@ -886,6 +919,20 @@ async function fetchFromCDN(path, asBlob, type){
   if(!r.ok) throw new Error('HTTP ' + r.status + ' en ' + url);
   if(!asBlob) return await r.text();
   const b = await r.blob();
+  // Validación de integridad del wasm (detecta archivos corruptos/truncados)
+  if(type === 'application/wasm'){
+    const cl = parseInt(r.headers.get('content-length') || '0', 10);
+    if(cl > 0 && b.size !== cl){
+      throw new Error('wasm truncado: recibidos ' + b.size + ' de ' + cl + ' bytes. Ejecuta fix_wllama.ps1 o re-descarga wllama/wasm/wllama.wasm.');
+    }
+    if(b.size < 8000000){
+      throw new Error('wasm demasiado pequeño (' + b.size + ' bytes): archivo corrupto/incompleto. Ejecuta fix_wllama.ps1.');
+    }
+    const head = new Uint8Array(await b.slice(0, 8).arrayBuffer());
+    if(!(head[0]===0x00 && head[1]===0x61 && head[2]===0x73 && head[3]===0x6D)){
+      throw new Error('wasm sin magic bytes \\0asm: archivo corrupto. Ejecuta fix_wllama.ps1 o re-descarga el wasm.');
+    }
+  }
   const obj = URL.createObjectURL(new Blob([b], {type: type || b.type || 'application/octet-stream'}));
   wllamaBlobUrls.push(obj);
   return obj;
@@ -916,7 +963,6 @@ async function getWllama(){
   const mod = await import(indexBlob);
   const Ctor = mod.Wllama || mod.default || (mod.default && mod.default.Wllama);
   if(!Ctor) throw new Error('wllama: no se encontró la clase constructora');
-  // wllama v3.1+: AssetsPathConfig = { default: <url del wasm> }
   wllamaInstance = new Ctor({ default: wasmUrl }, { allowOffline: true });
   return wllamaInstance;
 }
@@ -936,17 +982,32 @@ function wllamaProgressUI(pr){
 
 function wllamaLoadOpts(p, onProgress){
   const device = p.wllamaDevice || 'auto';
-  const useGpu = (device === 'gpu');
+  const useGpu   = (device === 'gpu');
+  const useSplit = (device === 'split');
+  const anyGpu   = useGpu || useSplit;
+  let ngl = 0;
+  if(useGpu)        ngl = -1;
+  else if(useSplit) ngl = Math.max(1, parseInt(p.wngl, 10) || 8);
+
+  const hw = navigator.hardwareConcurrency || 4;
+  const threads = (parseInt(p.wthr,10) > 0) ? parseInt(p.wthr,10) : (anyGpu ? Math.max(2, Math.floor(hw/2)) : hw);
+
+  // El buffer de compute (prefill) escala con n_ubatch.
+  // Modelos grandes o RAM justa => ubatch pequeño para no fallar "insufficient memory".
+  const dm = navigator.deviceMemory || 8;
+  const sz = (p._lastFile && p._lastFile.size) ? p._lastFile.size : 0;
+  const bigModel = sz > 3e9 || /7b|8b|9b|1[0-9]b/i.test(p.model || '');
+  let ub = anyGpu ? 512 : (bigModel || dm <= 8 ? 256 : 512);
+  if(p._ub) ub = p._ub;   // override tras un fallo de memoria
   return {
     n_ctx: Math.max(1024, cfg.ctxMax || 4096),
-    n_batch: 512,
-    n_ubatch: useGpu ? 512 : 2048,
-    n_threads: Math.max(2, Math.floor((navigator.hardwareConcurrency || 4) / 2)),
-    n_gpu_layers: useGpu ? -1 : 0,
-    // flash_attn y cache cuantizado SIEMPRE juntos o nunca:
-    flash_attn: useGpu,
-    cache_type_k: useGpu ? 'q8_0' : 'f16',
-    cache_type_v: useGpu ? 'q8_0' : 'f16',
+    n_batch: ub,
+    n_ubatch: ub,
+    n_threads: threads,
+    n_gpu_layers: ngl,
+    flash_attn: anyGpu,
+    cache_type_k: anyGpu ? 'q8_0' : 'f16',
+    cache_type_v: anyGpu ? 'q8_0' : 'f16',
     cont_batching: true,
     warmup: true,
     allowOffline: true,
@@ -970,7 +1031,7 @@ async function unloadWllama(){
 async function reloadWllamaDevice(){
   const p = providerById('wllama');
   if(!p) return;
-  setStatus('🔄 recargando modelo con ' + (p.wllamaDevice === 'gpu' ? 'GPU' : (p.wllamaDevice === 'cpu' ? 'CPU' : 'auto')) + '…', false);
+  setStatus('🔄 recargando modelo con ' + (p.wllamaDevice === 'gpu' ? 'GPU' : (p.wllamaDevice === 'split' ? 'Split' : (p.wllamaDevice === 'cpu' ? 'CPU' : 'auto'))) + '…', false);
   try{
     if(p._lastFile) await loadWllamaLocalFile(p, p._lastFile);
     else if(p.wurl || (p.wrepo && p.wfile)) await loadWllamaModel(p);
@@ -993,8 +1054,16 @@ function wllamaVisionTag(w, p){
   let has = false;
   try{ has = !!(w && w.supportInputModality && w.supportInputModality('image')); }catch(e){}
   if(has) return ' · 👁 visión activa';
-  if(p && (p.wmmproj || p._mmprojFile)) return ' · ⚠️ mmproj NO aplicado (revisa que sw.js tenga SET_MMPROJ)';
+  if(p && (p.wmmproj || p._mmprojFile)) return ' · ⚠️ mmproj NO aplicado (revisa el archivo mmproj)';
   return '';
+}
+
+function withTimeout(promise, ms, msg){
+  return new Promise(function(resolve, reject){
+    const t = setTimeout(function(){ reject(new ApiError(0, msg)); }, ms);
+    promise.then(function(v){ clearTimeout(t); resolve(v); },
+                 function(e){ clearTimeout(t); reject(e); });
+  });
 }
 
 async function loadWllamaModel(p){
@@ -1004,14 +1073,15 @@ async function loadWllamaModel(p){
   }
   const w = await getWllama();
   const opts = wllamaLoadOpts(p);
+  const DL_TIMEOUT = 10 * 60 * 1000;
   if(p.wurl){
-    await w.loadModelFromUrl(wllamaSource(p, new URL(p.wurl, location.href).href), opts);
+    await withTimeout(w.loadModelFromUrl(wllamaSource(p, new URL(p.wurl, location.href).href), opts), DL_TIMEOUT, 'La descarga/carga superó 10 min.');
   }else if(p.wmmproj){
     const mainUrl = 'https://huggingface.co/' + p.wrepo + '/resolve/main/' + p.wfile;
-    await w.loadModelFromUrl(wllamaSource(p, mainUrl), opts);
+    await withTimeout(w.loadModelFromUrl(wllamaSource(p, mainUrl), opts), DL_TIMEOUT, 'La descarga/carga superó 10 min.');
   }else{
     if(!p.wrepo || !p.wfile) throw new ApiError(0, 'wllama: falta Repo y Archivo .gguf (o usa URL directa / 📂 local)');
-    await w.loadModelFromHF(p.wrepo, p.wfile, opts);
+    await withTimeout(w.loadModelFromHF(p.wrepo, p.wfile, opts), DL_TIMEOUT, 'La descarga/carga superó 10 min.');
   }
   p._loaded = true;
   p.model = p.wfile || p.wurl || 'gguf-remoto';
@@ -1021,35 +1091,34 @@ async function loadWllamaModel(p){
   setStatus('✅ GGUF cargado: ' + p.model + wllamaVisionTag(w, p), false);
 }
 
-async function loadWllamaLocalFile(p, file){
-  setStatus('⬇ wllama: preparando GGUF local (' + file.name + ')…', false);
+/* Carga local: pasa el File directo (sin leer a ArrayBuffer) para evitar duplicar memoria */
+async function loadWllamaLocalFile(p, file, _retry){
+  setStatus('⬇ wllama: preparando GGUF local (' + file.name + ', ' + Math.round(file.size/1048576) + ' MB)…', false);
   const w = await getWllama();
-  
+  const device = p.wllamaDevice || 'auto';
+  const useGpu = (device === 'gpu' || device === 'split');
+  const LOAD_TIMEOUT = 8 * 60 * 1000;
+
   if(wllamaInstance && wllamaInstance.isModelLoaded && wllamaInstance.isModelLoaded()){
     await unloadWllama();
   }
 
-  // Método directo: cargar desde Blob (no requiere SW ni servidor)
   try{
-    setStatus('⬇ leyendo archivo…', false);
-    const buffer = await file.arrayBuffer();
-    const blob = new Blob([buffer]);
-    
-    setStatus('⬇ cargando modelo en memoria…', false);
     const opts = wllamaLoadOpts(p);
+    setStatus('⬇ cargando en ' + (useGpu ? (device==='split' ? 'Split' : 'GPU') : 'CPU') + ' · ' + opts.n_threads + ' hilos · n_gpu_layers=' + opts.n_gpu_layers + '…', false);
     opts.useCache = false;
     opts.allowOffline = true;
-    
-    // Si hay mmproj, cargarlo también
+    if(file.size > 1.5 * 1024 * 1024 * 1024) opts.splitMode = 'parallel';
+
+    let blobs = [file];
     if(p._mmprojFile){
       setStatus('⬇ cargando mmproj…', false);
-      const mmprojBuffer = await p._mmprojFile.arrayBuffer();
-      const mmprojBlob = new Blob([mmprojBuffer]);
-      await w.loadModel([blob, mmprojBlob], opts);
-    }else{
-      await w.loadModel([blob], opts);
+      blobs.push(p._mmprojFile);
     }
-    
+
+    await withTimeout(w.loadModel(blobs, opts), LOAD_TIMEOUT,
+      'La carga del modelo superó ' + (LOAD_TIMEOUT/60000) + ' min.');
+
     p._lastFile = file;
     p._loaded = true;
     p.model = file.name;
@@ -1059,7 +1128,28 @@ async function loadWllamaLocalFile(p, file){
     scheduleSave();
     setStatus('✅ GGUF local cargado: ' + p.model + wllamaVisionTag(w, p), false);
   }catch(e){
-    throw new ApiError(0, 'Error al cargar GGUF: ' + (e.message || e));
+    const msg = String((e && e.message) || e);
+    // Si falló por memoria de compute buffers, reducir ubatch y reintentar una vez
+    if(!_retry && /insufficient memory|failed to allocate|compute pp buffers|graph_reserve/i.test(msg)){
+      setStatus('⚠️ falta memoria para el batch; reintentando con batch menor…', false);
+      p._ub = 256;
+      try{ await unloadWllama(); }catch(e2){}
+      return loadWllamaLocalFile(p, file, true);
+    }
+    // Si se colgó/expiró en GPU o Split, reintentar UNA vez en CPU automáticamente
+    if(useGpu && !_retry && /superó|timeout|ABORT|unreachable|create context/i.test(msg)){
+      setStatus('⚠️ La GPU se colgó o tardó demasiado; reintentando en CPU…', false);
+      p.wllamaDevice = 'cpu';
+      gSet('gpuUserChose', 1);
+      scheduleSave();
+      try{ await unloadWllama(); }catch(e2){}
+      return loadWllamaLocalFile(p, file, true);
+    }
+    try{ await unloadWllama(); }catch(e2){}
+    if(/could not be read|NotReadableError|permission|out of memory|allocation failed/i.test(msg)){
+      throw new ApiError(0, 'No se pudo leer el archivo (' + file.name + '). Esto suele pasar con archivos >1.5GB en navegadores con poca RAM disponible. Prueba: cierra otras pestañas/apps pesadas, o usa "URL directa" (modelos/archivo.gguf) + ⬇ Cargar GGUF en vez de 📂.');
+    }
+    throw new ApiError(0, 'Error al cargar GGUF: ' + msg.slice(0,180));
   }
 }
 
@@ -1179,10 +1269,9 @@ async function callWllama(p, messages, onDelta, signal, modelOverride){
   }catch(e){
     if(signal && signal.aborted) throw new ApiError(0, 'detenido');
     const msg = String((e && e.message) || e);
-    // Si el wasm abortó (contexto inválido, chat_templates, etc.), limpiar instancia muerta
     if(/ABORT|unreachable|chat_templates|failed to create context|RuntimeError/i.test(msg)){
       try{ await unloadWllama(); }catch(e2){}
-      throw new ApiError(0, 'wllama colapsó. Pulsa 🔄 Recargar (o 📂 de nuevo) y reintenta. Detalle: ' + msg.slice(0, 120));
+      throw new ApiError(0, 'wllama colapsó al crear el contexto. Pulsa 🔄 Recargar (o 📂 de nuevo) y reintenta. Detalle: ' + msg.slice(0, 120));
     }
     throw e;
   }finally{
@@ -1195,7 +1284,7 @@ async function callProvider(p, messages, onDelta, signal, modelOverride){
   if(p.format === 'wllama') return callWllama(p, messages, onDelta, signal, modelOverride);
   if(p.format === 'gemini') return callGeminiStream(p, messages, onDelta, signal, modelOverride);
   if(p.format === 'aihorde') return callAIHorde(p, messages, onDelta, signal, modelOverride);
-  return callOpenAIStream(p, messages, onDelta, signal, cfg.ctxMax, modelOverride);
+  return callOpenAIStream(p, messages, onDelta, signal, cfg.maxOut, modelOverride);
 }
 
 /* ===== Cuotas, cooldown y rotación estilo OmniRoute ===== */
@@ -1320,16 +1409,6 @@ function limitMsg(e){
   if(e.status === 402 || e.status === 429) return st + (m.slice(0,70) || 'límite de presupuesto alcanzado');
   return st + (m.slice(0,110) || ('error ' + (e.name || 'red')));
 }
-function ensureStopBig(){
-  if(stopBigBtn) return stopBigBtn;
-  stopBigBtn = document.createElement('button');
-  stopBigBtn.className = 'stop-big';
-  stopBigBtn.textContent = '⏹';
-  stopBigBtn.title = 'Detener generación';
-  document.querySelector('.main').appendChild(stopBigBtn);
-  stopBigBtn.onclick = stopGen;
-  return stopBigBtn;
-}
 function stopGen(){
   if(stopCtrl) stopCtrl.abort('stop');
   if(searchCtrl) searchCtrl.abort('stop');
@@ -1338,7 +1417,6 @@ function stopGen(){
   sendBtn.disabled = false;
   spinner.classList.remove('on');
   stopBtn.style.display = 'none';
-  if(stopBigBtn) stopBigBtn.style.display = 'none';
   setStatus('⏹ detenido', false);
 }
 async function fileToDataUrl(file){
@@ -1485,6 +1563,9 @@ function autoScroll(){
   chatEl.scrollTop = chatEl.scrollHeight;
 }
 
+/* ===== Modo franco (system prompt de tono directo) ===== */
+const FRANK_PROMPT = 'MODO FRANCO activado por el usuario adulto que te habla. Responde de forma directa, concisa y sin rodeos: nada de preámbulos, nada de advertencias moralizantes repetidas, nada de "como IA debo...". Da opiniones claras cuando se te pidan, usa lenguaje natural y coloquial (incluida crudeza o humor negro si el tono de la conversación lo pide), y ve al grano. NO inventes datos. Mantén tus negativas ÚNICAMENTE para solicitudes que causen daño real, ilegal o violento a personas; para cualquier otro tema (política, sexo educativo, polémicas, críticas duras, código agresivo, etc.) sé totalmente directo y sin filtros de estilo.';
+
 /* ===== Orquestación del chat ===== */
 async function runChat(text, webNote){
   if(isBusy) return;
@@ -1504,6 +1585,10 @@ async function runChat(text, webNote){
   if(pid === 'auto'){ pid = ''; mid = ''; }
   const p = providerById(pid) || cfg.providers.find(function(x){ return x.enabled; });
   const messages = activeChat.msg.slice();
+
+  if(frankMode){
+    messages.unshift({role:'system', content:FRANK_PROMPT});
+  }
 
   let userContent = text;
   const hadFiles = pendingFiles.length;
@@ -1539,7 +1624,7 @@ async function runChat(text, webNote){
     }
     messages.unshift({
       role:'system',
-      content:'Tienes acceso a resultados de búsqueda en vivo (DuckDuckGo + Wikipedia). Debes responder basándote en ellos y citar las fuentes. Si el usuario pregunta algo factual reciente, la búsqueda ya se hizo: usa esos resultados.'
+      content:'Tienes acceso a resultados de búsqueda en vivo (Google/Bing/DuckDuckGo + Wikipedia). Debes responder basándote en ellos y citar las fuentes. Si el usuario pregunta algo factual reciente, la búsqueda ya se hizo: usa esos resultados.'
     });
   }
 
@@ -1566,7 +1651,6 @@ async function runChat(text, webNote){
   let usedModel = '';
   chatStartTime = Date.now();
 
-  // Meta persistente (una sola vez, se actualiza en vivo y queda fija al final)
   const metaEl = document.createElement('div');
   metaEl.className = 'meta';
   metaEl.style.display = 'none';
@@ -1577,8 +1661,7 @@ async function runChat(text, webNote){
     const elapsed = ((Date.now() - chatStartTime) / 1000).toFixed(1);
     const providerName = esc(used ? used.name : (p ? p.name : 'Copito'));
     const modelName = esc(opts.model || usedModel || (p ? p.model : ''));
-    let parts = [];
-    parts.push('<span>' + providerName + (modelName ? ' · ' + modelName : '') + '</span>');
+    const parts = ['<span>' + providerName + (modelName ? ' · ' + modelName : '') + '</span>'];
     if(opts.final && opts.tps){
       parts.push('<span style="color:var(--accent2);margin:0 12px">⚡ ' + opts.tps + ' tok/s · ' + opts.tokens + ' tokens · ' + elapsed + 's</span>');
     }else{
@@ -1678,7 +1761,6 @@ async function runChat(text, webNote){
       tps: m ? m.tps : null,
       tokens: m ? m.tokens : null
     });
-    // Guardar métricas DENTRO del mensaje para que sobrevivan recargas
     const mFinal = used._lastMetrics;
     activeChat.msg.push(
       {role:'user', content:userContent},
@@ -1707,7 +1789,6 @@ async function runChat(text, webNote){
   sendBtn.disabled = false;
   spinner.classList.remove('on');
   stopBtn.style.display = 'none';
-  if(stopBigBtn) stopBigBtn.style.display = 'none';
   stopCtrl = null;
   if(stickToBottom) autoScroll();
   syncScrollBtn();
@@ -1756,7 +1837,7 @@ function appendMsg(role, html, meta, rawText){
                 const r2 = m.role === 'user' ? 'user' : 'assistant';
                 const el2 = appendMsg(r2, md(displayContent(m.content)), null, m.role === 'user' ? m.content : undefined);
                 if(r2 === 'assistant'){
-                  el2.querySelector('.bubble').insertAdjacentHTML('beforeend', '<div class="meta"><button class="copybtn" onclick="copyMsg(this)">⧉ Copiar</button></div>');
+                  el2.querySelector('.bubble').insertAdjacentHTML('beforeend', '<div class="meta"><button class="copybtn" onclick="humanizeText(this)">🧑 Humanizar</button><button class="copybtn" onclick="copyMsg(this)">⧉ Copiar</button></div>');
                 }
               }
               persist();
@@ -1954,7 +2035,7 @@ function loadChat(id){
       let metaHtml = '<div class="meta">';
       if(m._metrics){
         const mm = m._metrics;
-        metaHtml += '<span>' + esc(mm.provider || '') + (mm.model ? ' · ' + esc(mm.model) : '') + '</span>';
+        metaHtml += '<span>' + (mm.kind === 'humanize' ? '🧑 ' : '') + esc(mm.provider || '') + (mm.model ? ' · ' + esc(mm.model) : '') + '</span>';
         if(mm.seconds != null) metaHtml += '<span style="color:var(--dim);margin:0 12px">⏱ ' + mm.seconds + 's</span>';
         if(mm.tps) metaHtml += '<span style="color:var(--accent2);margin:0 12px">⚡ ' + mm.tps + ' tok/s · ' + mm.tokens + ' tokens</span>';
       }
@@ -1974,9 +2055,9 @@ function rememberChat(id){
   }
   activeChat.title = (txt || 'chat').slice(0, 40) || 'chat';
 }
-/* ===== Overlay de progreso de carga de GGUF ===== */
+/* ===== Overlay de progreso de carga de GGUF (con cronómetro) ===== */
 const LO_PHASES = ['Leyendo cabeceras GGUF…','Descargando shards…','Cargando tensores en RAM…','Asignando buffers KV…','Preparando el tokenizer…','Calentando el modelo…','Casi listo…'];
-let loEl = null, loPhaseTimer = null, loPhaseIdx = 0;
+let loEl = null, loPhaseTimer = null, loPhaseIdx = 0, loStart = 0;
 function loEnsure(){
   if(loEl) return loEl;
   loEl = document.createElement('div');
@@ -1991,10 +2072,12 @@ function loShow(txt){
   el.querySelector('.lo-txt').textContent = txt;
   if(!loPhaseTimer){
     loPhaseIdx = 0;
-    el.querySelector('.lo-phase').textContent = LO_PHASES[0];
+    loStart = Date.now();
+    el.querySelector('.lo-phase').textContent = LO_PHASES[0] + '  ⏱ 0s';
     loPhaseTimer = setInterval(function(){
+      const secs = Math.round((Date.now() - loStart) / 1000);
       loPhaseIdx = (loPhaseIdx + 1) % LO_PHASES.length;
-      if(loEl) loEl.querySelector('.lo-phase').textContent = LO_PHASES[loPhaseIdx];
+      if(loEl) loEl.querySelector('.lo-phase').textContent = LO_PHASES[loPhaseIdx] + '  ⏱ ' + secs + 's';
     }, 2200);
   }
 }
@@ -2007,6 +2090,252 @@ function overlayHook(t, err){
   if(/^⬇/.test(s)){ loShow(s); return; }
   if(/^✅ GGUF/.test(s)){ loHide(); return; }
   if(err && /wllama/i.test(s)){ loShow('❌ ' + s); setTimeout(loHide, 4000); return; }
+}
+
+/* ===== SANDBOX de ejecución (control total del agente, offline) ===== */
+let termOpen = false;
+function termShow(){ $('termWrap').style.display = 'block'; }
+function termLog(line, cls){
+  termShow();
+  const log = $('termLog');
+  log.textContent += (cls === 'cmd' ? '\n$ ' : '\n') + line;
+  log.parentElement.scrollTop = log.parentElement.scrollHeight;
+}
+function toggleTerm(){
+  termOpen = !termOpen;
+  $('termBody').style.display = termOpen ? 'block' : 'none';
+  $('termToggle').textContent = termOpen ? '🐧 Terminal del agente ▾' : '🐧 Terminal del agente ▸';
+}
+
+/* --- Mini filesystem en memoria para el bash simulado --- */
+let simFS = { type:'dir', children:{
+  'home': {type:'dir', children:{ 'copito': {type:'dir', children:{
+    'notas.txt': {type:'file', content:'Bienvenido al entorno de pruebas de Copito.\n'},
+    'demo.py':   {type:'file', content:'print("hola desde el sandbox")\n'}
+  }}}},
+  'tmp': {type:'dir', children:{}},
+  'etc': {type:'dir', children:{ 'os-release': {type:'file', content:'NAME="CopitoSim"\nVERSION="1.0 (simulado)"\nID=copitosim\n'}}}
+}};
+let simCWD = ['home','copito'];
+function simResolve(path){
+  let parts = path.startsWith('/') ? path.split('/').filter(Boolean) : simCWD.concat(path.split('/').filter(Boolean));
+  const out = [];
+  for(const p of parts){
+    if(p === '.' ) continue;
+    if(p === '..'){ out.pop(); continue; }
+    out.push(p);
+  }
+  return out;
+}
+function simGet(parts){
+  let node = simFS;
+  for(const p of parts){
+    if(node.type !== 'dir' || !node.children[p]) return null;
+    node = node.children[p];
+  }
+  return node;
+}
+function simParent(parts){
+  return simGet(parts.slice(0, -1));
+}
+
+/* --- Bash simulado: comandos básicos offline --- */
+function bashSim(cmdline){
+  const args = cmdline.trim().split(/\s+/);
+  const cmd = args[0] || '';
+  const rest = args.slice(1);
+  const path = rest[0] || '.';
+  switch(cmd){
+    case '': return '';
+    case 'help': return 'Comandos disponibles: ls cd pwd cat echo mkdir touch rm cp mv find grep head tail wc date env whoami uname ps clear help\nPara apt/npm/git reales: usa 🐧 WebVM (requiere internet). Para pip: usa python con micropip.';
+    case 'pwd': return '/' + simCWD.join('/');
+    case 'whoami': return 'copito-agent';
+    case 'uname': return 'CopitoSim 1.0 (sandbox JavaScript, no es un kernel real)';
+    case 'date': return new Date().toString();
+    case 'env': return 'USER=copito-agent\nHOME=/home/copito\nSHELL=/bin/sh (simulado)\nSANDBOX=js-worker';
+    case 'ps': return '  PID TTY  TIME CMD\n    1 pts0 00:00 copito-sandbox\n    2 pts0 00:00 ' + cmd;
+    case 'clear': $('termLog').textContent = ''; return '';
+    case 'ls': {
+      const node = simGet(simResolve(path));
+      if(!node) return 'ls: no existe ' + path;
+      if(node.type === 'file') return path;
+      return Object.keys(node.children).map(function(k){ return node.children[k].type === 'dir' ? k + '/' : k; }).join('  ') || '(vacío)';
+    }
+    case 'cd': {
+      const parts = simResolve(path);
+      const node = simGet(parts);
+      if(!node || node.type !== 'dir') return 'cd: no es un directorio: ' + path;
+      simCWD = parts; return '';
+    }
+    case 'cat': {
+      const node = simGet(simResolve(path));
+      if(!node) return 'cat: no existe ' + path;
+      if(node.type === 'dir') return 'cat: ' + path + ' es un directorio';
+      return node.content;
+    }
+    case 'echo': return rest.join(' ');
+    case 'mkdir': {
+      const parts = simResolve(path);
+      const par = simParent(parts);
+      if(!par || par.type !== 'dir') return 'mkdir: no se puede crear ' + path;
+      par.children[parts[parts.length-1]] = {type:'dir', children:{}};
+      return '';
+    }
+    case 'touch': {
+      const parts = simResolve(path);
+      const par = simParent(parts);
+      if(!par) return 'touch: no se puede crear ' + path;
+      if(!par.children[parts[parts.length-1]]) par.children[parts[parts.length-1]] = {type:'file', content:''};
+      return '';
+    }
+    case 'rm': {
+      const parts = simResolve(path);
+      const par = simParent(parts);
+      if(!par || !par.children[parts[parts.length-1]]) return 'rm: no existe ' + path;
+      delete par.children[parts[parts.length-1]];
+      return '';
+    }
+    case 'cp': case 'mv': {
+      const src = simGet(simResolve(rest[0]||''));
+      if(!src) return cmd + ': no existe ' + rest[0];
+      const dstParts = simResolve(rest[1]||'');
+      const par = simParent(dstParts);
+      if(!par) return cmd + ': destino inválido';
+      par.children[dstParts[dstParts.length-1]] = src;
+      if(cmd === 'mv'){ const sp = simResolve(rest[0]); const spar = simParent(sp); if(spar) delete spar.children[sp[sp.length-1]]; }
+      return '';
+    }
+    case 'find': {
+      const results = [];
+      (function walk(node, prefix){
+        if(node.type !== 'dir') return;
+        for(const k of Object.keys(node.children)){
+          results.push(prefix + '/' + k);
+          walk(node.children[k], prefix + '/' + k);
+        }
+      })(simFS, '');
+      return results.join('\n') || '(vacío)';
+    }
+    case 'grep': {
+      const pat = rest[0] || '';
+      const file = rest[1];
+      if(!file) return 'uso: grep <patrón> <archivo>';
+      const node = simGet(simResolve(file));
+      if(!node || node.type !== 'file') return 'grep: no existe ' + file;
+      return node.content.split('\n').filter(function(l){ return l.indexOf(pat) !== -1; }).join('\n') || '(sin coincidencias)';
+    }
+    case 'head': case 'tail': {
+      const node = simGet(simResolve(path));
+      if(!node || node.type !== 'file') return cmd + ': no existe ' + path;
+      const lines = node.content.split('\n');
+      return cmd === 'head' ? lines.slice(0,10).join('\n') : lines.slice(-10).join('\n');
+    }
+    case 'wc': {
+      const node = simGet(simResolve(path));
+      if(!node || node.type !== 'file') return 'wc: no existe ' + path;
+      const lines = node.content.split('\n').length;
+      const words = node.content.split(/\s+/).filter(Boolean).length;
+      return lines + ' ' + words + ' ' + node.content.length + ' ' + path;
+    }
+    case 'apt': case 'apt-get': return '[simulado] apt no está disponible aquí. Para paquetes Debian reales usa 🐧 WebVM (online).';
+    case 'npm': return '[simulado] npm no está disponible aquí. Para Node real usa 🐧 WebVM (online).';
+    case 'git': return '[simulado] git no está disponible aquí. Para git real usa 🐧 WebVM (online).';
+    case 'pip': return '[simulado] usa python con micropip:  python -m micropip.install("paquete")  (requiere Pyodide).';
+    case 'wget': case 'curl': return isOnline() ? '[simulado] descarga no implementada; el contenido real requiere WebVM.' : '[sin red] wget/curl requieren conexión; usa 🐧 WebVM.';
+    default: return 'sh: comando no encontrado: ' + cmd + '  (prueba "help")';
+  }
+}
+
+/* --- Motor JS en Worker: 100% offline --- */
+function sandboxRunJS(code, onLog){
+  return new Promise(function(resolve){
+    const src = 'self.onmessage=function(e){var logs=[];function c(){logs.push(Array.prototype.slice.call(arguments).join(" "));}console.log=c;console.error=c;console.warn=c;var r;try{r=eval(e.data);self.postMessage({out:logs.join("\\n")+(r!==undefined?("\\n=> "+r):"")});}catch(err){self.postMessage({out:logs.join("\\n")+"\\n[error] "+err.message});}};';
+    const w = new Worker(URL.createObjectURL(new Blob([src], {type:'text/javascript'})));
+    const t = setTimeout(function(){ w.terminate(); resolve('[timeout: el código tardó >10 s]'); }, 10000);
+    w.onmessage = function(e){ clearTimeout(t); w.terminate(); resolve(e.data.out || '(sin salida)'); };
+    w.onerror = function(e){ clearTimeout(t); w.terminate(); resolve('[error] ' + e.message); };
+    w.postMessage(code);
+  });
+}
+
+/* --- Pyodide opcional (Python + micropip) --- */
+let pyodideInst = null, pyodideTried = false;
+function loadScript(src){
+  return new Promise(function(res, rej){
+    const s = document.createElement('script');
+    s.src = src; s.onload = res; s.onerror = function(){ rej(new Error('no ' + src)); };
+    document.head.appendChild(s);
+  });
+}
+async function getSandboxPy(){
+  if(pyodideInst) return pyodideInst;
+  if(pyodideTried && !window.loadPyodide) throw new Error('Pyodide no disponible');
+  pyodideTried = true;
+  const bases = ['./pyodide/', 'https://cdn.jsdelivr.net/pyodide/v0.26.4/full/'];
+  for(const b of bases){
+    try{
+      await loadScript(b + 'pyodide.js');
+      if(window.loadPyodide){ pyodideInst = await window.loadPyodide({indexURL:b}); return pyodideInst; }
+    }catch(e){}
+  }
+  throw new Error('Pyodide no disponible (sin carpeta local ni CDN)');
+}
+async function sandboxRunPython(code, onLog){
+  const py = await getSandboxPy();
+  const out = [];
+  py.setStdout({batched:function(s){ out.push(s); }});
+  py.setStderr({batched:function(s){ out.push('[err] ' + s); }});
+  try{ const r = await py.runPythonAsync(code); if(r !== undefined) out.push('=> ' + r); }
+  catch(e){ out.push('[exception] ' + (e.message || e)); }
+  return out.join('\n') || '(sin salida)';
+}
+async function sandboxPip(pkgs){
+  const py = await getSandboxPy();
+  try{ await py.loadPackage(pkgs); return 'cargado: ' + pkgs; }
+  catch(e){
+    await py.loadPackage('micropip');
+    const mp = py.pyimport('micropip');
+    await mp.install(pkgs);
+    return 'instalado vía micropip: ' + pkgs;
+  }
+}
+
+/* --- Ejecutar según lenguaje, logueando al terminal colapsable --- */
+async function sandboxExec(lang, code){
+  termLog((lang === 'bash' ? '' : '# ' + lang + '\n') + code.slice(0, 500), 'cmd');
+  let out;
+  if(lang === 'bash'){
+    const lines = code.split('\n');
+    const outs = [];
+    for(const ln of lines){
+      if(!ln.trim() || ln.trim().startsWith('#')) continue;
+      outs.push(bashSim(ln));
+    }
+    out = outs.join('\n');
+  }else if(lang === 'python'){
+    try{ out = await sandboxRunPython(code); }
+    catch(e){ out = '[pyodide no disponible] ' + (e.message || e); }
+  }else{
+    out = await sandboxRunJS(code);
+  }
+  termLog(out.slice(0, 2000));
+  return out;
+}
+
+/* --- Detecta si el agente debe usar el entorno --- */
+function agentNeedsEnv(text){
+  return /ejecut|compil|prueb|script|comando|terminal|linux|bash|corr|instal|calcul|verific|simul|algoritmo|regex|parse|matem|fibonacci|orden|archivo|carpeta|ls|cat|grep/i.test(text || '');
+}
+
+/* --- Extrae un bloque de código de la respuesta del agente --- */
+function extractCode(text){
+  const fence = String(text || '').match(/```(\w*)\n([\s\S]*?)```/);
+  if(fence){
+    const langRaw = (fence[1] || '').toLowerCase();
+    const lang = (langRaw === 'py' || langRaw === 'python') ? 'python' : (langRaw === 'bash' || langRaw === 'sh' || langRaw === 'shell') ? 'bash' : 'js';
+    return {lang:lang, code:fence[2]};
+  }
+  return null;
 }
 
 /* ===== Modal de proveedores ===== */
@@ -2135,8 +2464,7 @@ function injectWllamaControls(){
     if(pid !== 'wllama') return;
     const p = providerById('wllama');
     if(!p) return;
-    // Limpia filas viejas/duplicadas
-    ['[data-wrepo]','[data-wurl]','[data-wmmproj]','[data-wload]','[data-wlocal]','[data-wmmprojpick]','[data-wunload]','[data-wreload]','[data-wdevice]'].forEach(function(sel){
+    ['[data-wrepo]','[data-wurl]','[data-wmmproj]','[data-wload]','[data-wlocal]','[data-wmmprojpick]','[data-wunload]','[data-wreload]','[data-wdevice]','[data-wngl]','[data-wthr]','[data-thrwrap]'].forEach(function(sel){
       const el = card.querySelector(sel);
       if(el){
         const rowEl = el.closest('.row-2') || el.closest('div[style]') || el.parentElement;
@@ -2157,7 +2485,15 @@ function injectWllamaControls(){
                      '<div class="form-group" style="margin-top:8px"><label>mmproj — visión local (opcional)</label><input value="' + esc(p.wmmproj||'') + '" data-wmmproj="wllama" placeholder="modelos/mmproj-vision-f16.gguf"></div>';
     const devRow = document.createElement('div');
     devRow.style.marginTop = '8px';
-    devRow.innerHTML = '<div class="form-group" style="margin:0"><label>Dispositivo de inferencia</label><select data-wdevice="wllama" style="width:100%"><option value="auto"' + ((p.wllamaDevice||'auto')==='auto'?' selected':'') + '>🔀 Auto (CPU por defecto)</option><option value="gpu"' + (p.wllamaDevice==='gpu'?' selected':'') + '>🎮 GPU (WebGPU)</option><option value="cpu"' + (p.wllamaDevice==='cpu'?' selected':'') + '>🖥️ CPU (todos los cores)</option></select></div>';
+    devRow.innerHTML = '<div class="row-2" style="margin:0">' +
+      '<div class="form-group" style="margin:0"><label>Dispositivo de inferencia</label><select data-wdevice="wllama" style="width:100%">' +
+        '<option value="auto"'  + ((p.wllamaDevice||'auto')==='auto'  ? ' selected':'') + '>🔀 Auto (CPU por defecto)</option>' +
+        '<option value="gpu"'   + (p.wllamaDevice==='gpu'   ? ' selected':'') + '>🎮 GPU (todo en WebGPU)</option>' +
+        '<option value="split"' + (p.wllamaDevice==='split' ? ' selected':'') + '>🧩 Split GPU+CPU (capas repartidas)</option>' +
+        '<option value="cpu"'   + (p.wllamaDevice==='cpu'   ? ' selected':'') + '>🖥️ CPU (todos los cores)</option>' +
+      '</select></div>' +
+      '<div class="form-group" style="margin:0"><label>Capas en GPU (solo Split)</label><input type="number" min="1" step="1" value="' + (p.wngl||8) + '" data-wngl="wllama" style="width:100%"></div>' +
+      '</div>';
     const row3 = document.createElement('div');
     row3.style.cssText = 'display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap';
     row3.innerHTML = '<button class="testbtn" data-wlocal="wllama" style="border-color:var(--accent);color:var(--accent)">📂 Archivo local</button>' +
@@ -2181,6 +2517,18 @@ function injectWllamaControls(){
       scheduleSave();
       setStatus('dispositivo → ' + e.target.value + ' (pulsa 🔄 Recargar para aplicarlo)', false);
     };
+    devRow.querySelector('[data-wngl]').oninput = function(e){ p.wngl = parseInt(e.target.value, 10) || 8; scheduleSave(); };
+
+    let thrWrap = devRow.querySelector('[data-thrwrap]');
+    if(!thrWrap){
+      thrWrap = document.createElement('div');
+      thrWrap.dataset.thrwrap = '1';
+      thrWrap.className = 'form-group';
+      thrWrap.style.marginTop = '8px';
+      thrWrap.innerHTML = '<label>Hilos CPU (0 = auto)</label><input type="number" min="0" step="1" value="' + (p.wthr||0) + '" data-wthr="wllama" style="width:100%">';
+      devRow.appendChild(thrWrap);
+      thrWrap.querySelector('[data-wthr]').oninput = function(e){ p.wthr = parseInt(e.target.value,10) || 0; scheduleSave(); };
+    }
 
     let finp = document.getElementById('wllamaFileInput');
     if(!finp){
@@ -2414,364 +2762,7 @@ function addEndpoint(){
   refreshModelSel();
   scheduleSave();
 }
-/* ===== Detección de GPU débil (Intel integrada) — respeta tu elección manual ===== */
-(function(){
-  const p = providerById('wllama');
-  if(!p) return;
-  if(p.wllamaDevice !== 'auto' || gGet().gpuUserChose) return;
-  if(!navigator.gpu) return;
-  navigator.gpu.requestAdapter().then(function(adapter){
-    if(!adapter) return;
-    const info = adapter.info || adapter;
-    const vendor = String(info.vendor || '').toLowerCase();
-    const arch = String(info.architecture || '').toLowerCase();
-    if(vendor.indexOf('intel') !== -1 && arch !== 'discrete'){
-      p.wllamaDevice = 'cpu';
-      scheduleSave();
-      console.log('⚠️ GPU Intel integrada detectada → forzado CPU (más rápido en NUC)');
-    }else if(vendor.indexOf('nvidia') !== -1 || vendor.indexOf('amd') !== -1 || arch === 'discrete'){
-      p.wllamaDevice = 'gpu';
-      scheduleSave();
-      console.log('🎮 GPU discreta detectada → forzado GPU');
-    }
-  }).catch(function(e){});
-})();
-
-/* ===== MODO AGÉNTICO: orquestador + ingeniero de prompts + resolvedor + evaluador ===== */
-let agentMode = false;
-function agentWarnIfSlow(){
-  const combos = orderCombos('', '');
-  if(!combos.length) return false;
-  const c = combos[0];
-  if(c.p.format === 'wllama' && (c.p.wllamaDevice || 'auto') !== 'gpu'){
-    return true;
-  }
-  return false;
-}
-async function agentCall(systemPrompt, userText, sig){
-  const combos = orderCombos('', '');
-  if(!combos.length) throw new ApiError(0, 'sin proveedores');
-  const c = combos[0];
-  return await callProvider(c.p, [
-    {role:'system', content:systemPrompt},
-    {role:'user', content:userText}
-  ], null, sig, c.model);
-}
-async function runAgentic(text, webNote){
-  if(agentWarnIfSlow()){
-    const ok = confirm('⚠️ MODO AGÉNTICO CON GGUF EN CPU\n\nEl modo agéntico hace 4 llamadas seguidas al modelo (orquestador + prompt + resolvedor + evaluador). Con un GGUF corriendo en CPU cada llamada puede tardar varios minutos, y el ciclo completo podría demorar MUCHO o no terminar.\n\nEste modo está pensado para modelos rápidos (GPU WebGPU o endpoints con key gratis).\n\n¿Continuar de todos modos?');
-    if(!ok){
-      setStatus('🤖 ciclo agéntico cancelado (GGUF en CPU es demasiado lento)', true);
-      return;
-    }
-  }
-  let plan = '';
-  setStatus('🤖 agente 1/4: orquestador…', false);
-  try{ plan = await agentCall('Eres un orquestador. Descompón la tarea del usuario en máximo 4 pasos breves y di qué perfil de experto la resuelve. Sé conciso.', text, null); }catch(e){ plan = ''; }
-  let refined = text;
-  setStatus('🤖 agente 2/4: ingeniero de prompts…', false);
-  try{
-    refined = await agentCall('Eres un ingeniero de prompts. Reescribe la pregunta como un prompt claro, completo y sin ambigüedad. Si hay un PLAN, incorpóralo. Devuelve SOLO el prompt mejorado.', (plan ? ('PLAN:\n' + plan + '\n\n') : '') + 'PREGUNTA:\n' + text, null);
-  }catch(e){ refined = text; }
-  if(webNote) refined += '\n\nCONTEXTOS DE BÚSQUEDA:\n' + webNote.content;
-  setStatus('🤖 agente 3/4: resolvedor…', false);
-  await runChat(refined, null);
-  setStatus('🤖 agente 4/4: evaluador…', false);
-  let evalTxt = '';
-  try{
-    const last = activeChat.msg.length ? plainContent(activeChat.msg[activeChat.msg.length - 1].content) : '';
-    evalTxt = await agentCall('Eres un evaluador de calidad. Puntúa 1-10 el RESULTADO frente a la PREGUNTA y di en una frase si la cumple. Sé breve.', 'PREGUNTA:\n' + text + '\n\nRESULTADO:\n' + last, null);
-  }catch(e){ evalTxt = ''; }
-  if(evalTxt){
-    const el = appendMsg('assistant', md('**🤖 Evaluación del agente:**\n' + evalTxt), 'evaluador');
-    el.querySelector('.bubble').insertAdjacentHTML('beforeend', '<div class="meta"><button class="copybtn" onclick="copyMsg(this)">⧉ Copiar</button></div>');
-    activeChat.msg.push({role:'assistant', content:'🤖 Evaluación: ' + evalTxt});
-    persist();
-    autoScroll();
-  }
-  setStatus('🤖 ciclo agéntico completo', false);
-}
-
-/* ===== Arranque ===== */
-function boot(){
-  try{
-    const savedActive = localStorage.getItem(LS_ACTIVE);
-    if(savedActive && chats[savedActive]) activeId = savedActive;
-  }catch(e){}
-
-  if(location.protocol.startsWith('http') && 'serviceWorker' in navigator){
-    navigator.serviceWorker.register('sw.js').then(function(){
-      console.log('SW registrado');
-    }).catch(function(e){
-      console.warn('SW no registrado (¿falta sw.js?):', e.message);
-    });
-  }
-
-  applyTheme();
-  refreshModelSel();
-  refreshModels();
-
-  inp.addEventListener('keydown', function(e){
-    if(e.key === 'Enter' && !e.shiftKey){
-      e.preventDefault();
-      send();
-    }
-  });
-  inp.addEventListener('input', function(){
-    inp.style.height = 'auto';
-    inp.style.height = Math.min(inp.scrollHeight, 220) + 'px';
-  });
-
-  sendBtn.onclick = send;
-  stopBtn.onclick = stopGen;
-  $('themeBtn').onclick = toggleTheme;
-  attachBtn.onclick = function(){ fileInp.click(); };
-
-  fileInp.onchange = async function(e){
-    const files = Array.from(e.target.files);
-    for(const f of files){
-      if(/\.gguf$/i.test(f.name)){
-        const wp = providerById('wllama');
-        if(wp){
-          wp.enabled = true;
-          loadWllamaLocalFile(wp, f).catch(function(err){
-            setStatus('wllama local: ' + limitMsg(err), true);
-          });
-          continue;
-        }
-      }
-      const ext = (f.name.split('.').pop() || '').toLowerCase();
-      if(ext === 'docx' || ext === 'xlsx' || ext === 'pptx'){
-        try{
-          const filter = ext === 'docx' ? /word\/document\.xml$/ : (ext === 'xlsx' ? /(xl\/sharedStrings\.xml|xl\/worksheets\/sheet\d+\.xml)$/ : /ppt\/slides\/slide\d+\.xml$/);
-          const t = await zipText(f, filter);
-          pendingFiles.push({name:f.name, type:f.type, text:t || '(no se pudo extraer texto del ' + ext + ')', size:f.size});
-        }catch(err){ pendingFiles.push({name:f.name, type:f.type, text:'(archivo Office no legible)', size:f.size}); }
-        continue;
-      }
-      if(ext === 'pdf'){
-        try{
-          const t = await pdfText(f);
-          pendingFiles.push({name:f.name, type:f.type, text:t || '(PDF sin texto extraíble; puede estar escaneado)', size:f.size});
-        }catch(err){ pendingFiles.push({name:f.name, type:f.type, text:'(PDF no legible)', size:f.size}); }
-        continue;
-      }
-      if(ext === 'doc' || ext === 'xls' || ext === 'ppt'){
-        pendingFiles.push({name:f.name, type:f.type, text:'(formato antiguo binario; convierte a ' + ext + 'x para extraer su texto)', size:f.size});
-        continue;
-      }
-      if(f.type && f.type.startsWith('image/')){
-        const dataUrl = await fileToDataUrl(f);
-        pendingFiles.push({name:f.name, type:f.type, dataUrl:dataUrl, size:f.size});
-      }else{
-        const text = await f.text();
-        pendingFiles.push({name:f.name, type:f.type, text:text, size:f.size});
-      }
-    }
-    if(pendingFiles.length){
-      attachBtn.style.background = 'rgba(124,92,255,.15)';
-      attachBtn.style.borderColor = 'var(--accent)';
-    }
-    fileInp.value = '';
-  };
-
-  const gBtn = $('ggufLocalBtn');
-  const gInp = $('ggufLocalInput');
-  if(gBtn && gInp){
-    gBtn.onclick = function(){ gInp.value = ''; gInp.click(); };
-    gInp.onchange = async function(){
-      const f = gInp.files && gInp.files[0];
-      if(!f) return;
-      const p = providerById('wllama');
-      p.enabled = true;
-      try{ await loadWllamaLocalFile(p, f); }
-      catch(e){ setStatus('GGUF local: ' + limitMsg(e), true); }
-    };
-  }
-
-  const openConfig = function(showWizard){
-    $('modalBg').classList.add('open');
-    renderProviders();
-    $('strategySel').value = cfg.strategy;
-    $('ctxMax').value = cfg.ctxMax;
-	$('maxOut').value = cfg.maxOut || 2048;
-    $('compactToggle').classList.toggle('on', cfg.autoCompact);
-    refreshModels();
-    $('wizardBanner').style.display = (showWizard || !cfg.wizardDone) ? 'block' : 'none';
-  };
-  $('configBtn').onclick = function(){ openConfig(false); };
-  $('wizardBtn').onclick = function(){ openConfig(true); };
-  $('modalClose').onclick = function(){ $('modalBg').classList.remove('open'); };
-  $('saveCfg').onclick = saveAll;
-    $('memoryBtn').onclick = function(){
-    $('memoryBg').classList.add('open');
-    memoryView('md');
-  };
-    $('exportBtn').onclick = function(){
-    const fmts = ['md','json','csv','pdf','doc','ppt'];
-    const labels = {'md':'Markdown (.md)','json':'JSON','csv':'Excel/CSV','pdf':'PDF (imprimir)','doc':'Word (.doc)','ppt':'PowerPoint (.ppt)'};
-    const choice = prompt('Elige formato:\n\n' + fmts.map(function(f){ return '• ' + f + '  →  ' + labels[f]; }).join('\n') + '\n\nEscribe el código (md/json/csv/pdf/doc/ppt):', 'md');
-    if(choice && fmts.indexOf(choice) !== -1) exportChat(choice);
-  };
-  $('resetCfg').onclick = function(){
-    if(confirm('Reiniciar config (quitar keys) y borrar registros?')){
-      document.cookie = COOKIE_CFG + '=;Max-Age=0;path=/;';
-      localStorage.clear();
-      location.reload();
-    }
-  };
-  $('newChatBtn').onclick = newChat;
-  $('addEndpoint').onclick = addEndpoint;
-  $('compactToggle').onclick = function(){ $('compactToggle').classList.toggle('on'); };
-
-  // Atajos de teclado: Esc cierra, Ctrl+S / Ctrl+Enter guardan
-  document.addEventListener('keydown', function(e){
-    if(e.key === 'Escape' && $('modalBg').classList.contains('open')){
-      $('modalBg').classList.remove('open');
-    }
-    if((e.ctrlKey || e.metaKey) && (e.key.toLowerCase() === 's' || e.key === 'Enter')){
-      if($('modalBg').classList.contains('open')){
-        e.preventDefault();
-        saveAll();
-      }
-    }
-  });
-
-  $('wizardAuto').onclick = function(){
-    modelSel.value = 'auto|auto';
-    gSet('lastModel', 'auto|auto');
-    cfg.defModel = 'auto';
-    cfg.wizardDone = true;
-    saveCfgNow();
-    $('wizardBanner').style.display = 'none';
-    setStatus('🔀 modo Auto activo: rota proveedores y modelos solo', false);
-  };
-  $('wizardDone').onclick = function(){
-    cfg.wizardDone = true;
-    saveCfgNow();
-    $('wizardBanner').style.display = 'none';
-    setStatus('config guardada', false);
-  };
-  $('wizardSkip').onclick = function(){
-    cfg.wizardDone = true;
-    saveCfgNow();
-    $('wizardBanner').style.display = 'none';
-  };
-
-  searchBtn.onclick = function(){
-    searchMode = !searchMode;
-    searchBtn.textContent = searchMode ? '🌐' : '🔍';
-    searchBtn.title = searchMode ? 'Búsqueda en internet ACTIVA (DDG): cada mensaje se enriquece' : 'Activar búsqueda en internet (DDG)';
-    searchBtn.style.background = searchMode ? 'rgba(0,200,180,.15)' : 'var(--bg3)';
-    searchBtn.style.borderColor = searchMode ? 'var(--accent2)' : 'var(--border)';
-    inp.placeholder = searchMode
-      ? '🌐 Internet activo: escribe y Enter (DDG + modelo actual)'
-      : 'Escribe un mensaje… (Enter = enviar, Shift+Enter = salto de línea)';
-  };
-
-  chatEl.addEventListener('scroll', function(){
-    stickToBottom = isNearBottom();
-    syncScrollBtn();
-  });
-  scrollDownBtn.onclick = function(){
-    stickToBottom = true;
-    chatEl.scrollTo({top:chatEl.scrollHeight, behavior:'smooth'});
-    syncScrollBtn();
-  };
-
-  $('sidebarToggle').onclick = function(e){
-    e.stopPropagation();
-    document.querySelector('.sidebar').classList.toggle('show');
-  };
-  document.addEventListener('click', function(e){
-    if(window.innerWidth <= 900){
-      const sb = document.querySelector('.sidebar');
-      const btn = $('sidebarToggle');
-      if(sb && sb.classList.contains('show') && !sb.contains(e.target) && !btn.contains(e.target)){
-        sb.classList.remove('show');
-      }
-    }
-  });
-
-  if(!activeId){
-    newChat();
-  }else{
-    loadChat(activeId);
-  }
-
-  modelSel.addEventListener('change', function(){
-    gSet('lastModel', modelSel.value);
-    const lbl = modelSel.options[modelSel.selectedIndex] ? modelSel.options[modelSel.selectedIndex].textContent : modelSel.value;
-    setStatus('modelo → ' + (lbl || ''), false);
-  });
-
-  // Botón 🤖 modo agéntico (con advertencia de GGUF en CPU al activar)
-  (function(){
-    const b = document.createElement('button');
-    b.id = 'agentBtn'; b.className = 'iconbtn'; b.textContent = '🤖';
-    b.title = 'Modo agéntico: orquestador + prompt + resolvedor + evaluador (requiere modelo rápido)';
-    b.style.color = 'var(--warn)';
-    const sb = $('searchBtn');
-    sb.parentElement.insertBefore(b, sb);
-    b.onclick = function(){
-      const turningOn = !agentMode;
-      if(turningOn && agentWarnIfSlow()){
-        const ok = confirm('⚠️ MODO AGÉNTICO + GGUF EN CPU\n\nEl modo agéntico encadena 4 llamadas al modelo por cada mensaje. Con un GGUF en CPU esto puede tardar MUCHO (minutos por llamada) o no terminar.\n\nRecomendado solo con: GPU WebGPU (🎮) o endpoints rápidos con key gratis.\n\n¿Activar de todos modos?');
-        if(!ok) return;
-      }
-      agentMode = turningOn;
-      b.style.background = agentMode ? 'rgba(255,202,58,.15)' : 'var(--bg3)';
-      b.style.borderColor = agentMode ? 'var(--warn)' : 'var(--border)';
-      setStatus(agentMode ? '🤖 modo agéntico ACTIVO' : '🤖 modo agéntico desactivado', false);
-    };
-  })();
-
-  // Auto-recarga del GGUF por URL (modelos/...) al abrir
-  const wpAuto = providerById('wllama');
-  if(wpAuto && wpAuto.enabled && wpAuto.wurl && location.protocol.startsWith('http')){
-    setTimeout(function(){
-      loadWllamaModel(wpAuto).catch(function(e){ console.warn('auto-recarga GGUF:', e.message); });
-    }, 800);
-  }
-
-  if(tailAutofixed || pathAutofixed){
-    saveCfgNow();
-    const fixes = [];
-    if(tailAutofixed) fixes.push('URL Tailscale corregida (.ts)');
-    if(pathAutofixed) fixes.push('ruta /chat/completions corregida');
-    setStatus('⚠️ Corregidas: ' + fixes.join(' y '), false);
-  }else{
-    setStatus('listo — sin key: Pollinations + AI Horde + Wllama (GGUF)', false);
-  }
-  autoScroll();
-}
-
-async function send(){
-  const text = inp.value.trim();
-  if(!text && pendingFiles.length === 0) return;
-  if(isBusy) return;
-  let finalText = text;
-  let webNote = null;
-  if(searchMode && text){
-    setStatus('🔍 buscando en internet…', false);
-    const sc = new AbortController();
-    searchCtrl = sc;
-    let results = [];
-    try{ results = await webSearch(text, 5, sc.signal); }catch(e){ results = []; }
-    searchCtrl = null;
-    if(results.length){
-      webNote = {
-        n:results.length,
-        content:'[Fecha: ' + new Date().toLocaleDateString('es-ES', {year:'numeric', month:'long', day:'numeric'}) + '] — búsqueda en internet para: "' + text + '"\n\n' + results.map(function(r, i){ return (i + 1) + '. ' + r; }).join('\n')
-      };
-        }else{
-      finalText = text + '\n\n[Nota del sistema: se intentó buscar en internet en vivo pero no se obtuvieron resultados útiles para esta consulta. Responde con tu conocimiento general y aclara brevemente al inicio que no pudiste verificar datos en tiempo real.]';
-    }
-  }
-  inp.value = '';
-  inp.style.height = 'auto';
-  if(agentMode){ await runAgentic(finalText, webNote); } else { await runChat(finalText, webNote); }
-}
+/* ===== Memoria del chat 🧠 ===== */
 function memoryView(kind){
   if(!activeChat){ $('memoryOut').value = '(sin chat)'; return; }
   const out = $('memoryOut');
@@ -2792,12 +2783,21 @@ function memoryExport(kind){
   a.download = 'copito-memoria-' + Date.now() + '.' + (kind === 'json' ? 'json' : 'md');
   a.click();
 }
+
+/* ===== Exportar conversación ⬇ (6 formatos) ===== */
+function downloadBlob(text, filename, mime){
+  const blob = new Blob([text], {type: mime});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(function(){ a.remove(); }, 100);
+}
 function exportChat(format){
   if(!activeChat || !activeChat.msg.length){ alert('No hay nada que exportar.'); return; }
   const title = (activeChat.title || 'copito-chat').replace(/[^\w\-]+/g,'_').slice(0,40);
-  const ts = Date.now();
 
-  // Markdown
   if(format === 'md'){
     const body = '# Conversación — ' + title + '\n\n_Fecha: ' + new Date().toLocaleString() + '_\n\n' +
       activeChat.msg.map(function(m){
@@ -2807,18 +2807,14 @@ function exportChat(format){
     downloadBlob(body, title + '.md', 'text/markdown');
     return;
   }
-
-  // JSON crudo
   if(format === 'json'){
     downloadBlob(JSON.stringify(activeChat.msg, null, 2), title + '.json', 'application/json');
     return;
   }
-
-  // CSV (conversación tabular)
   if(format === 'csv'){
     const rows = [['rol','timestamp','contenido']];
     activeChat.msg.forEach(function(m, i){
-      rows.push([m.role, new Date(activeChat.created + i*1000).toISOString(), plainContent(m.content).replace(/\n/g,' ')]);
+      rows.push([m.role, new Date((activeChat.created||Date.now()) + i*1000).toISOString(), plainContent(m.content).replace(/\n/g,' ')]);
     });
     const csv = rows.map(function(r){
       return r.map(function(c){ return '"' + String(c).replace(/"/g,'""') + '"'; }).join(',');
@@ -2826,8 +2822,6 @@ function exportChat(format){
     downloadBlob('\uFEFF' + csv, title + '.csv', 'text/csv;charset=utf-8');
     return;
   }
-
-  // HTML imprimible (→ PDF vía Ctrl+P del navegador)
   if(format === 'pdf'){
     const body = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>' + esc(title) + '</title>' +
       '<style>body{font-family:-apple-system,Segoe UI,Roboto,sans-serif;max-width:800px;margin:24px auto;padding:0 20px;color:#222}' +
@@ -2850,8 +2844,6 @@ function exportChat(format){
     w.document.close();
     return;
   }
-
-  // Word (.doc) — HTML con MIME application/msword
   if(format === 'doc'){
     const body = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>' + esc(title) + '</title></head><body>' +
       '<h1>' + esc(title) + '</h1><p>Fecha: ' + new Date().toLocaleString() + '</p>' +
@@ -2863,30 +2855,19 @@ function exportChat(format){
     downloadBlob(body, title + '.doc', 'application/msword');
     return;
   }
-
-  // PowerPoint (.ppt) — formato MIME compatible (no PPTX real, pero PowerPoint lo abre como presentación)
   if(format === 'ppt'){
-    // Generamos un HTML simple que PowerPoint puede abrir como presentación (diapositivas por mensaje)
     const slides = activeChat.msg.map(function(m, i){
       const who = m.role === 'user' ? '👤 Tú' : '🤖 Asistente';
       return '<div style="page-break-after:always;padding:60px 40px;border:1px solid #ccc;height:500px">' +
         '<h2 style="color:#7c5cff">Diapositiva ' + (i+1) + ' — ' + who + '</h2>' +
         '<div style="font-size:16px;line-height:1.6">' + esc(displayContent(m.content)).replace(/\n/g,'<br>') + '</div></div>';
     }).join('');
-    const body = '<html><head><meta charset="utf-8"></head><body>' + slides + '</body></html>';
-    downloadBlob(body, title + '.ppt', 'application/vnd.ms-powerpoint');
+    downloadBlob('<html><head><meta charset="utf-8"></head><body>' + slides + '</body></html>', title + '.ppt', 'application/vnd.ms-powerpoint');
     return;
   }
 }
-function downloadBlob(text, filename, mime){
-  const blob = new Blob([text], {type: mime});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  setTimeout(function(){ a.remove(); }, 100);
-}
+
+/* ===== Humanizar 🧑 como respuesta nueva (con métricas y stop) ===== */
 async function humanizeText(btn){
   if(isBusy) return;
   const bubble = btn.closest('.bubble');
@@ -2907,7 +2888,6 @@ async function humanizeText(btn){
   const onStop = function(){ manuallyStopped = true; };
   sig.addEventListener('abort', onStop);
 
-  // NUEVA burbuja de asistente (respuesta independiente)
   const botEl = appendMsg('assistant', '', '🧑 humanizando');
   const nb = botEl.querySelector('.bubble');
   botEl.classList.add('typing');
@@ -3017,22 +2997,433 @@ async function humanizeText(btn){
   syncScrollBtn();
   setStatus('🧑 humanizado', false);
 }
+
+/* ===== Detección de GPU débil (Intel integrada) — respeta elección manual ===== */
+(function(){
+  const p = providerById('wllama');
+  if(!p) return;
+  if(p.wllamaDevice !== 'auto' || gGet().gpuUserChose) return;
+  if(!navigator.gpu) return;
+  navigator.gpu.requestAdapter().then(function(adapter){
+    if(!adapter) return;
+    const info = adapter.info || adapter;
+    const vendor = String(info.vendor || '').toLowerCase();
+    const arch = String(info.architecture || '').toLowerCase();
+    if(vendor.indexOf('intel') !== -1 && arch !== 'discrete'){
+      p.wllamaDevice = 'cpu';
+      scheduleSave();
+      console.log('⚠️ GPU Intel integrada detectada → forzado CPU (más rápido en NUC)');
+    }else if(vendor.indexOf('nvidia') !== -1 || vendor.indexOf('amd') !== -1 || arch === 'discrete'){
+      p.wllamaDevice = 'gpu';
+      scheduleSave();
+      console.log('🎮 GPU discreta detectada → forzado GPU');
+    }
+  }).catch(function(e){});
+})();
+
+/* ===== MODO AGÉNTICO 🤖 (4 roles + loop autónomo de sandbox) ===== */
+let agentMode = false;
+function agentWarnIfSlow(){
+  const combos = orderCombos('', '');
+  if(!combos.length) return false;
+  const c = combos[0];
+  if(c.p.format === 'wllama' && (c.p.wllamaDevice || 'auto') !== 'gpu' && (c.p.wllamaDevice || 'auto') !== 'split'){
+    return true;
+  }
+  return false;
+}
+async function agentCall(systemPrompt, userText, sig){
+  const combos = orderCombos('', '');
+  if(!combos.length) throw new ApiError(0, 'sin proveedores');
+  const c = combos[0];
+  return await callProvider(c.p, [
+    {role:'system', content:systemPrompt},
+    {role:'user', content:userText}
+  ], null, sig, c.model);
+}
+const ENV_CAPS = 'ENTORNOS DE EJECUCIÓN DISPONIBLES:\n' +
+  '- javascript: SIEMPRE disponible (offline). Usa console.log() para mostrar resultados.\n' +
+  '- python: disponible si hay Pyodide (carpeta local ./pyodide/ o internet). Puedes usar micropip.install("paquete") para librerías pure-python.\n' +
+  '- bash: SIMULADO offline (ls, cd, pwd, cat, echo, mkdir, touch, rm, cp, mv, find, grep, head, tail, wc, date, env). NO tiene apt/npm/git reales.\n' +
+  'Si la tarea requiere apt, npm, git o binarios reales, DÍLO claramente en tu respuesta y sugiere usar 🐧 WebVM (online). Elige el lenguaje más adecuado y devuelve SOLO el código en un bloque ``` .';
+
+async function runAgentic(text, webNote){
+  if(agentWarnIfSlow()){
+    const ok = confirm('⚠️ MODO AGÉNTICO CON GGUF EN CPU\n\nEl modo agéntico encadena varias llamadas al modelo por cada mensaje (orquestador + prompt + resolvedor + evaluador + entorno). Con un GGUF en CPU cada llamada puede tardar varios minutos y el ciclo completo podría demorar MUCHO o no terminar.\n\nRecomendado solo con: GPU WebGPU (🎮), Split (🧩) o endpoints rápidos con key gratis.\n\n¿Continuar de todos modos?');
+    if(!ok){
+      setStatus('🤖 ciclo agéntico cancelado (GGUF en CPU es demasiado lento)', true);
+      return;
+    }
+  }
+  let plan = '';
+  setStatus('🤖 agente 1/4: orquestador…', false);
+  try{ plan = await agentCall('Eres un orquestador. Descompón la tarea del usuario en máximo 4 pasos breves y di qué perfil de experto la resuelve, y si requiere ejecutar código o pruebas. Sé conciso.', text, null); }catch(e){ plan = ''; }
+  let refined = text;
+  setStatus('🤖 agente 2/4: ingeniero de prompts…', false);
+  try{
+    refined = await agentCall('Eres un ingeniero de prompts. Reescribe la pregunta como un prompt claro, completo y sin ambigüedad. Si hay un PLAN, incorpóralo. Devuelve SOLO el prompt mejorado.', (plan ? ('PLAN:\n' + plan + '\n\n') : '') + 'PREGUNTA:\n' + text, null);
+  }catch(e){ refined = text; }
+  if(webNote) refined += '\n\nCONTEXTOS DE BÚSQUEDA:\n' + webNote.content;
+
+  setStatus('🤖 agente 3/4: resolvedor…', false);
+  await runChat(refined, null);
+
+  // Loop autónomo de ejecución en el sandbox (si la tarea lo requiere)
+  let lastExecOut = '';
+  if(agentNeedsEnv(text) || agentNeedsEnv(refined) || /código|ejecut|prueb/i.test(plan)){
+    for(let iter = 0; iter < 2; iter++){
+      setStatus('🤖 agente: generando código de prueba (' + (iter+1) + '/2)…', false);
+      let codeTxt = '';
+      try{
+        codeTxt = await agentCall(
+          'Eres un ingeniero de pruebas. ' + ENV_CAPS + '\n\nEscribe SOLO un bloque de código ejecutable que resuelva o VERIFIQUE el objetivo, con salidas visibles (console.log / print). Devuelve únicamente el código dentro de ``` . Sin explicaciones.',
+          refined + (iter > 0 ? ('\n\nLa ejecución anterior dio este resultado, CORRIGE si falló:\n' + lastExecOut) : ''),
+          null
+        );
+      }catch(e){ codeTxt = ''; }
+      const ex = extractCode(codeTxt);
+      if(!ex) break;
+      setStatus('🤖 agente: ejecutando en el entorno (' + ex.lang + ')…', false);
+      lastExecOut = await sandboxExec(ex.lang, ex.code);
+      setStatus('🤖 agente: analizando resultado…', false);
+      let conclusion = '';
+      try{
+        conclusion = await agentCall(
+          'Dado el objetivo y la SALIDA de ejecución de abajo, responde al usuario con el resultado final verificado y una explicación breve. Si la salida muestra un error, corrige mentalmente y da la solución correcta. Si el entorno no soporta algo (apt/npm/git), dilo y sugiere 🐧 WebVM.',
+          'OBJETIVO:\n' + refined + '\n\nSALIDA DE EJECUCIÓN (' + ex.lang + '):\n' + lastExecOut,
+          null
+        );
+      }catch(e){ conclusion = ''; }
+      if(conclusion){
+        const el = appendMsg('assistant', md('**🐧 Verificado en entorno de ejecución (' + ex.lang + '):**\n\n' + conclusion), 'agente+entorno');
+        el.querySelector('.bubble').insertAdjacentHTML('beforeend', '<div class="meta"><button class="copybtn" onclick="humanizeText(this)">🧑 Humanizar</button><button class="copybtn" onclick="copyMsg(this)">⧉ Copiar</button></div>');
+        activeChat.msg.push({role:'assistant', content:conclusion});
+        persist();
+        autoScroll();
+      }
+      if(!/error|exception|traceback|undefined is not|no encontrado/i.test(lastExecOut)) break;
+    }
+  }
+
+  setStatus('🤖 agente 4/4: evaluador…', false);
+  let evalTxt = '';
+  try{
+    const last = activeChat.msg.length ? plainContent(activeChat.msg[activeChat.msg.length - 1].content) : '';
+    evalTxt = await agentCall('Eres un evaluador de calidad. Puntúa 1-10 el RESULTADO frente a la PREGUNTA y di en una frase si la cumple. Sé breve.', 'PREGUNTA:\n' + text + '\n\nRESULTADO:\n' + last, null);
+  }catch(e){ evalTxt = ''; }
+  if(evalTxt){
+    const el = appendMsg('assistant', md('**🤖 Evaluación del agente:**\n' + evalTxt), 'evaluador');
+    el.querySelector('.bubble').insertAdjacentHTML('beforeend', '<div class="meta"><button class="copybtn" onclick="copyMsg(this)">⧉ Copiar</button></div>');
+    activeChat.msg.push({role:'assistant', content:'🤖 Evaluación: ' + evalTxt});
+    persist();
+    autoScroll();
+  }
+  setStatus('🤖 ciclo agéntico completo', false);
+}
+
+/* ===== Arranque ===== */
+function boot(){
+  try{
+    const savedActive = localStorage.getItem(LS_ACTIVE);
+    if(savedActive && chats[savedActive]) activeId = savedActive;
+  }catch(e){}
+
+  if(location.protocol.startsWith('http') && 'serviceWorker' in navigator){
+    navigator.serviceWorker.register('sw.js').then(function(){
+      console.log('SW registrado');
+    }).catch(function(e){
+      console.warn('SW no registrado (¿falta sw.js?):', e.message);
+    });
+  }
+
+  applyTheme();
+  refreshModelSel();
+  refreshModels();
+
+  inp.addEventListener('keydown', function(e){
+    if(e.key === 'Enter' && !e.shiftKey){
+      e.preventDefault();
+      send();
+    }
+  });
+  inp.addEventListener('input', function(){
+    inp.style.height = 'auto';
+    inp.style.height = Math.min(inp.scrollHeight, 220) + 'px';
+  });
+
+  sendBtn.onclick = send;
+  stopBtn.onclick = stopGen;
+  $('themeBtn').onclick = toggleTheme;
+  attachBtn.onclick = function(){ fileInp.click(); };
+  $('termToggle').onclick = toggleTerm;
+
+  fileInp.onchange = async function(e){
+    const files = Array.from(e.target.files);
+    for(const f of files){
+      if(/\.gguf$/i.test(f.name)){
+        const wp = providerById('wllama');
+        if(wp){
+          wp.enabled = true;
+          loadWllamaLocalFile(wp, f).catch(function(err){
+            setStatus('wllama local: ' + limitMsg(err), true);
+          });
+          continue;
+        }
+      }
+      const ext = (f.name.split('.').pop() || '').toLowerCase();
+      if(ext === 'docx' || ext === 'xlsx' || ext === 'pptx'){
+        try{
+          const filter = ext === 'docx' ? /word\/document\.xml$/ : (ext === 'xlsx' ? /(xl\/sharedStrings\.xml|xl\/worksheets\/sheet\d+\.xml)$/ : /ppt\/slides\/slide\d+\.xml$/);
+          const t = await zipText(f, filter);
+          pendingFiles.push({name:f.name, type:f.type, text:t || '(no se pudo extraer texto del ' + ext + ')', size:f.size});
+        }catch(err){ pendingFiles.push({name:f.name, type:f.type, text:'(archivo Office no legible)', size:f.size}); }
+        continue;
+      }
+      if(ext === 'pdf'){
+        try{
+          const t = await pdfText(f);
+          pendingFiles.push({name:f.name, type:f.type, text:t || '(PDF sin texto extraíble; puede estar escaneado)', size:f.size});
+        }catch(err){ pendingFiles.push({name:f.name, type:f.type, text:'(PDF no legible)', size:f.size}); }
+        continue;
+      }
+      if(ext === 'doc' || ext === 'xls' || ext === 'ppt'){
+        pendingFiles.push({name:f.name, type:f.type, text:'(formato antiguo binario; convierte a ' + ext + 'x para extraer su texto)', size:f.size});
+        continue;
+      }
+      if(f.type && f.type.startsWith('image/')){
+        const dataUrl = await fileToDataUrl(f);
+        pendingFiles.push({name:f.name, type:f.type, dataUrl:dataUrl, size:f.size});
+      }else{
+        const text = await f.text();
+        pendingFiles.push({name:f.name, type:f.type, text:text, size:f.size});
+      }
+    }
+    if(pendingFiles.length){
+      attachBtn.style.background = 'rgba(124,92,255,.15)';
+      attachBtn.style.borderColor = 'var(--accent)';
+    }
+    fileInp.value = '';
+  };
+
+  const gBtn = $('ggufLocalBtn');
+  const gInp = $('ggufLocalInput');
+  if(gBtn && gInp){
+    gBtn.onclick = function(){ gInp.value = ''; gInp.click(); };
+    gInp.onchange = async function(){
+      const f = gInp.files && gInp.files[0];
+      if(!f) return;
+      const p = providerById('wllama');
+      p.enabled = true;
+      try{ await loadWllamaLocalFile(p, f); }
+      catch(e){ setStatus('GGUF local: ' + limitMsg(e), true); }
+    };
+  }
+
+  $('memoryBtn').onclick = function(){
+    $('memoryBg').classList.add('open');
+    memoryView('md');
+  };
+
+  $('exportBtn').onclick = function(){
+    const fmts = ['md','json','csv','pdf','doc','ppt'];
+    const labels = {'md':'Markdown (.md)','json':'JSON','csv':'Excel/CSV','pdf':'PDF (imprimir)','doc':'Word (.doc)','ppt':'PowerPoint (.ppt)'};
+    const choice = prompt('Elige formato:\n\n' + fmts.map(function(f){ return '• ' + f + '  →  ' + labels[f]; }).join('\n') + '\n\nEscribe el código (md/json/csv/pdf/doc/ppt):', 'md');
+    if(choice && fmts.indexOf(choice) !== -1) exportChat(choice);
+  };
+
+  $('webvmBtn').onclick = function(){
+    const panel = $('webvmPanel');
+    const fr = $('webvmFrame');
+    if(panel.style.display === 'none'){
+      if(fr.src === 'about:blank' || !fr.src) fr.src = 'https://webvm.io/';
+      panel.style.display = 'flex';
+    }else{
+      panel.style.display = 'none';
+    }
+  };
+
+  $('frankBtn').onclick = function(){
+    frankMode = !frankMode;
+    $('frankBtn').textContent = frankMode ? '🔓' : '🔒';
+    $('frankBtn').style.background = frankMode ? 'rgba(255,202,58,.15)' : 'var(--bg3)';
+    $('frankBtn').style.borderColor = frankMode ? 'var(--warn)' : 'var(--border)';
+    setStatus(frankMode ? '🔓 modo franco ACTIVO (tono directo)' : '🔒 modo franco desactivado', false);
+  };
+
+  const openConfig = function(showWizard){
+    $('modalBg').classList.add('open');
+    renderProviders();
+    $('strategySel').value = cfg.strategy;
+    $('ctxMax').value = cfg.ctxMax;
+    $('maxOut').value = cfg.maxOut || 2048;
+    $('compactToggle').classList.toggle('on', cfg.autoCompact);
+    refreshModels();
+    $('wizardBanner').style.display = (showWizard || !cfg.wizardDone) ? 'block' : 'none';
+  };
+  $('configBtn').onclick = function(){ openConfig(false); };
+  $('wizardBtn').onclick = function(){ openConfig(true); };
+  $('modalClose').onclick = function(){ $('modalBg').classList.remove('open'); };
+  $('saveCfg').onclick = saveAll;
+  $('resetCfg').onclick = function(){
+    if(confirm('Reiniciar config (quitar keys) y borrar registros?')){
+      document.cookie = COOKIE_CFG + '=;Max-Age=0;path=/;';
+      localStorage.clear();
+      location.reload();
+    }
+  };
+  $('newChatBtn').onclick = newChat;
+  $('addEndpoint').onclick = addEndpoint;
+  $('compactToggle').onclick = function(){ $('compactToggle').classList.toggle('on'); };
+
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'Escape'){
+      if($('modalBg').classList.contains('open')) $('modalBg').classList.remove('open');
+      if($('memoryBg').classList.contains('open')) $('memoryBg').classList.remove('open');
+    }
+    if((e.ctrlKey || e.metaKey) && (e.key.toLowerCase() === 's' || e.key === 'Enter')){
+      if($('modalBg').classList.contains('open')){
+        e.preventDefault();
+        saveAll();
+      }
+    }
+  });
+
+  $('wizardAuto').onclick = function(){
+    modelSel.value = 'auto|auto';
+    gSet('lastModel', 'auto|auto');
+    cfg.defModel = 'auto';
+    cfg.wizardDone = true;
+    saveCfgNow();
+    $('wizardBanner').style.display = 'none';
+    setStatus('🔀 modo Auto activo: rota proveedores y modelos solo', false);
+  };
+  $('wizardDone').onclick = function(){
+    cfg.wizardDone = true;
+    saveCfgNow();
+    $('wizardBanner').style.display = 'none';
+    setStatus('config guardada', false);
+  };
+  $('wizardSkip').onclick = function(){
+    cfg.wizardDone = true;
+    saveCfgNow();
+    $('wizardBanner').style.display = 'none';
+  };
+
+  searchBtn.onclick = function(){
+    searchMode = !searchMode;
+    searchBtn.textContent = searchMode ? '🌐' : '🔍';
+    searchBtn.title = searchMode ? 'Búsqueda en internet ACTIVA (Google/Bing/DDG): cada mensaje se enriquece' : 'Activar búsqueda en internet';
+    searchBtn.style.background = searchMode ? 'rgba(0,200,180,.15)' : 'var(--bg3)';
+    searchBtn.style.borderColor = searchMode ? 'var(--accent2)' : 'var(--border)';
+    inp.placeholder = searchMode
+      ? '🌐 Internet activo: escribe y Enter (Google/Bing/DDG + modelo actual)'
+      : 'Escribe un mensaje… (Enter = enviar, Shift+Enter = salto de línea)';
+  };
+
+  chatEl.addEventListener('scroll', function(){
+    stickToBottom = isNearBottom();
+    syncScrollBtn();
+  });
+  scrollDownBtn.onclick = function(){
+    stickToBottom = true;
+    chatEl.scrollTo({top:chatEl.scrollHeight, behavior:'smooth'});
+    syncScrollBtn();
+  };
+
+  $('sidebarToggle').onclick = function(e){
+    e.stopPropagation();
+    document.querySelector('.sidebar').classList.toggle('show');
+  };
+  document.addEventListener('click', function(e){
+    if(window.innerWidth <= 900){
+      const sb = document.querySelector('.sidebar');
+      const btn = $('sidebarToggle');
+      if(sb && sb.classList.contains('show') && !sb.contains(e.target) && !btn.contains(e.target)){
+        sb.classList.remove('show');
+      }
+    }
+  });
+
+  if(!activeId){
+    newChat();
+  }else{
+    loadChat(activeId);
+  }
+
+  modelSel.addEventListener('change', function(){
+    gSet('lastModel', modelSel.value);
+    const lbl = modelSel.options[modelSel.selectedIndex] ? modelSel.options[modelSel.selectedIndex].textContent : modelSel.value;
+    setStatus('modelo → ' + (lbl || ''), false);
+  });
+
+  // Botón 🤖 modo agéntico (con advertencia de GGUF en CPU al activar)
+  (function(){
+    const b = document.createElement('button');
+    b.id = 'agentBtn'; b.className = 'iconbtn'; b.textContent = '🤖';
+    b.title = 'Modo agéntico: orquestador + prompt + resolvedor + entorno de ejecución + evaluador';
+    b.style.color = 'var(--warn)';
+    const sb = $('searchBtn');
+    sb.parentElement.insertBefore(b, sb);
+    b.onclick = function(){
+      const turningOn = !agentMode;
+      if(turningOn && agentWarnIfSlow()){
+        const ok = confirm('⚠️ MODO AGÉNTICO + GGUF EN CPU\n\nEl modo agéntico encadena varias llamadas al modelo por cada mensaje. Con un GGUF en CPU esto puede tardar MUCHO (minutos por llamada) o no terminar.\n\nRecomendado solo con: GPU WebGPU (🎮), Split (🧩) o endpoints rápidos con key gratis.\n\n¿Activar de todos modos?');
+        if(!ok) return;
+      }
+      agentMode = turningOn;
+      b.style.background = agentMode ? 'rgba(255,202,58,.15)' : 'var(--bg3)';
+      b.style.borderColor = agentMode ? 'var(--warn)' : 'var(--border)';
+      setStatus(agentMode ? '🤖 modo agéntico ACTIVO' : '🤖 modo agéntico desactivado', false);
+    };
+  })();
+
+  const wpAuto = providerById('wllama');
+  if(wpAuto && wpAuto.enabled && wpAuto.wurl && location.protocol.startsWith('http')){
+    setTimeout(function(){
+      loadWllamaModel(wpAuto).catch(function(e){ console.warn('auto-recarga GGUF:', e.message); });
+    }, 800);
+  }
+
+  if(tailAutofixed || pathAutofixed){
+    saveCfgNow();
+    const fixes = [];
+    if(tailAutofixed) fixes.push('URL Tailscale corregida (.ts)');
+    if(pathAutofixed) fixes.push('ruta /chat/completions corregida');
+    setStatus('⚠️ Corregidas: ' + fixes.join(' y '), false);
+  }else{
+    setStatus('listo — sin key: Pollinations + AI Horde + Wllama (GGUF) + sandbox', false);
+  }
+  autoScroll();
+}
+
+async function send(){
+  const text = inp.value.trim();
+  if(!text && pendingFiles.length === 0) return;
+  if(isBusy) return;
+  let finalText = text;
+  let webNote = null;
+  if(searchMode && text){
+    setStatus('🔍 buscando en internet (Google/Bing/DDG)…', false);
+    const sc = new AbortController();
+    searchCtrl = sc;
+    let results = [];
+    try{ results = await webSearch(text, 5, sc.signal); }catch(e){ results = []; }
+    searchCtrl = null;
+    if(results.length){
+      webNote = {
+        n:results.length,
+        content:'[Fecha: ' + new Date().toLocaleDateString('es-ES', {year:'numeric', month:'long', day:'numeric'}) + '] — búsqueda en internet para: "' + text + '"\n\n' + results.map(function(r, i){ return (i + 1) + '. ' + r; }).join('\n')
+      };
+    }else{
+      finalText = text + '\n\n[Nota del sistema: se intentó buscar en internet en vivo pero no se obtuvieron resultados útiles para esta consulta. Responde con tu conocimiento general y aclara brevemente al inicio que no pudiste verificar datos en tiempo real.]';
+    }
+  }
+  inp.value = '';
+  inp.style.height = 'auto';
+  if(agentMode){ await runAgentic(finalText, webNote); } else { await runChat(finalText, webNote); }
+}
+
 boot();
 </script>
-<div class="modal-bg" id="memoryBg">
-  <div class="modal" style="max-width:800px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-      <h2 style="margin:0">🧠 Memoria del chat</h2>
-      <button onclick="$('memoryBg').classList.remove('open')" style="font-size:20px;color:var(--dim)">✕</button>
-    </div>
-    <div style="display:flex;gap:8px;margin-bottom:10px">
-      <button class="testbtn" onclick="memoryView('md')">Markdown</button>
-      <button class="testbtn" onclick="memoryView('json')">JSON crudo</button>
-      <button class="testbtn" onclick="memoryExport('md')">⬇ Descargar .md</button>
-      <button class="testbtn" onclick="memoryExport('json')">⬇ Descargar .json</button>
-    </div>
-    <textarea id="memoryOut" readonly style="width:100%;height:60vh;background:var(--bg);color:var(--txt);font-family:ui-monospace,monospace;font-size:12px"></textarea>
-  </div>
-</div>
 </body>
 </html>
