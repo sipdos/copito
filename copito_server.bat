@@ -1,0 +1,11 @@
+@echo off
+cd /d "%~dp0"
+title Copito OFFLINE
+echo ============================================
+echo  Copito OFFLINE en http://localhost:8080
+echo  Multi-thread activo (headers COOP/COEP)
+echo  No cierres esta ventana mientras chateas.
+echo ============================================
+start "" http://localhost:8080/index.html
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$l=New-Object Net.HttpListener; $l.Prefixes.Add('http://localhost:8080/'); $l.Start(); Write-Host 'Servidor Copito listo en http://localhost:8080'; while($l.IsListening){ try{ $c=$l.GetContext(); $p=$c.Request.Url.LocalPath; if($p -eq '/'){$p='/index.html'}; $rel=($p -replace '/','\').TrimStart('\'); $f=Join-Path '%~dp0' $rel; if(Test-Path $f -PathType Leaf){ $b=[IO.File]::ReadAllBytes($f); $ext=[IO.Path]::GetExtension($f).ToLower(); $ct='application/octet-stream'; if($ext -eq '.html'){$ct='text/html; charset=utf-8'}; if($ext -eq '.js'){$ct='text/javascript'}; if($ext -eq '.mjs'){$ct='text/javascript'}; if($ext -eq '.wasm'){$ct='application/wasm'}; if($ext -eq '.css'){$ct='text/css'}; if($ext -eq '.json'){$ct='application/json'}; $c.Response.ContentType=$ct; $c.Response.Headers.Add('Access-Control-Allow-Origin','*'); $c.Response.Headers.Add('Cross-Origin-Opener-Policy','same-origin'); $c.Response.Headers.Add('Cross-Origin-Embedder-Policy','require-corp'); $c.Response.Headers.Add('Cross-Origin-Resource-Policy','cross-origin'); $c.Response.Headers.Add('Accept-Ranges','bytes'); $rg=$c.Request.Headers['Range']; if($rg -and ($rg -match 'bytes=(\d+)-(\d*)')){ $s=[long]$Matches[1]; $e=$b.Length-1; if($Matches[2]){$e=[long]$Matches[2]}; if($e -ge $b.Length){$e=$b.Length-1}; if($s -gt $e){$s=0}; $ln=$e-$s+1; $c.Response.StatusCode=206; $c.Response.Headers.Add('Content-Range','bytes '+$s+'-'+$e+'/'+$b.Length); $c.Response.ContentLength64=$ln; $c.Response.OutputStream.Write($b,$s,$ln) } else { $c.Response.ContentLength64=$b.Length; $c.Response.OutputStream.Write($b,0,$b.Length) } } else { $c.Response.StatusCode=404; $c.Response.ContentLength64=0 }; $c.Response.Close() } catch { try{ $c.Response.Close() }catch{} } }"
+pause
