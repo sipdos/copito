@@ -292,10 +292,11 @@ const KEY_URLS={groq:'https://console.groq.com/keys',openrouter:'https://openrou
 
 const MODELS_URLS={pollinations:'https://text.pollinations.ai/models',groq:'https://api.groq.com/openai/v1/models',openrouter:'https://openrouter.ai/api/v1/models',mistral:'https://api.mistral.ai/v1/models',cerebras:'https://api.cerebras.ai/v1/models',sambanova:'https://api.sambanova.ai/v1/models',githubmodels:'https://models.inference.ai.azure.com/models',nvidia:'https://integrate.api.nvidia.com/v1/models',together:'https://api.together.xyz/v1/models',huggingface:'https://router.huggingface.co/v1/models',cohere:'https://api.cohere.com/compatibility/v1/models',fireworks:'https://api.fireworks.ai/inference/v1/models',deepinfra:'https://api.deepinfra.com/v1/openai/models'};
 
+
 const DEFAULT_CFG={
   strategy:'priority',ctxMax:4096,maxOut:2048,autoCompact:true,defModel:'auto',theme:'dark',wizardDone:false,
   providers:[
-    {id:'pollinations',name:'Pollinations (sin key)',kind:'remote',format:'openai',enabled:true,base:'https://text.pollinations.ai/openai',model:'openai-fast',key:'',ctx:9000,timeout:120000,keyless:true,headers:{'X-Referer':'https://copito.local'},models:['openai-fast','openai','gpt-oss-20b','mistral','llama'],note:'Sin key. CORS abierto. Principal para zero-config.'},
+    {id:'pollinations',name:'Pollinations (sin key)',kind:'remote',format:'pollinations',enabled:true,base:'https://text.pollinations.ai/openai',model:'openai-fast',key:'',ctx:9000,timeout:120000,keyless:true,headers:{'X-Referer':'https://copito.local'},models:['openai-fast','openai','gpt-oss-20b','mistral','llama'],note:'Sin key. CORS abierto. Principal para zero-config.'},
     {id:'aihorde',name:'AI Horde (sin key, reserva)',kind:'remote',format:'aihorde',enabled:true,base:'https://aihorde.net/api/v2/generate/text',model:'',key:'0000000000',ctx:4000,timeout:240000,keyless:true,models:['NousResearch/Nous-Hermes-2-Mixtral-8x7B-DPO','KoboldAI/LLaMA2-13B-Tiefighter','teknium/OpenHermes-2.5-Mistral-7B','microsoft/phi-3-mini-128k'],note:'Sin key real usando token anónimo. Puede ser lento por cola comunitaria.'},
     {id:'wllama',name:'Wllama local (GGUF en navegador)',kind:'local',format:'wllama',enabled:true,base:'',model:'',key:'',wrepo:'bartowski/Llama-3.2-3B-Instruct-GGUF',wfile:'Llama-3.2-3B-Instruct-Q4_K_M.gguf',wurl:'',wmmproj:'',wllamaDevice:'auto',wngl:8,wthr:0,ctx:4096,timeout:300000,keyless:true,models:[],note:'Endpoint local: carga un GGUF desde archivo, carpeta modelos/ o HuggingFace. CPU/GPU/Split. Visión si cargas su mmproj. Sin key ni servidor.'},
     {id:'groq',name:'Groq (key gratis)',kind:'remote',format:'openai',enabled:false,base:'https://api.groq.com/openai/v1/chat/completions',model:'llama-3.1-8b-instant',key:'',ctx:12000,timeout:60000,keyless:false,models:['llama-3.1-8b-instant','llama-3.3-70b-versatile','openai/gpt-oss-20b'],note:'Key gratuita oficial. Muy rápido.'},
@@ -376,6 +377,7 @@ function loadCfg(){
     if(typeof rawObj.wizardDone==='boolean')c.wizardDone=rawObj.wizardDone;
   }
   for(const p of c.providers){p.base=tailFix(pathFix(p.base));p.modelsUrl=tailFix(pathFix(p.modelsUrl||''));}
+  const pol=c.providers.find(p=>p.id==='pollinations'); if(pol) pol.format='pollinations';
   return c;
 }
 
@@ -585,6 +587,7 @@ function modelsUrl(p){
   return b + '/models';
 }
 async function fetchModels(p){
+  if(p.format === 'pollinations') return {ids:(p.models || []).slice(), diag:''};
   if(p.format === 'wllama') return {ids:null, diag:'local (wllama): los "modelos" son los GGUF que cargues'};
   if(p.format === 'aihorde') return {ids:(p.models || []).slice(), diag:''};
   const url = modelsUrl(p);
@@ -834,12 +837,26 @@ async function callAIHorde(p, messages, onDelta, signal, modelOverride){
     else signal.addEventListener('abort', onAbort);
   }
   try{
+      let chosenModel = modelOverride || p.model || '';
+    if(!chosenModel){
+      try{
+        const wr = await fetch('https://aihorde.net/api/v2/workers?type=text', {headers:{'Client-Agent':'copito:1.0:web'}, signal:ctrl.signal});
+        if(wr.ok){
+          const ws = await wr.json();
+          if(Array.isArray(ws) && ws.length){
+            const counts = {};
+            ws.forEach(function(w){ (w.models || []).forEach(function(m){ counts[m] = (counts[m]||0) + 1; }); });
+            chosenModel = Object.keys(counts).sort(function(a,b){ return counts[b]-counts[a]; })[0] || '';
+          }
+        }
+      }catch(e){}
+    }
     const submit = await fetch(p.base + '/async', {
       method:'POST',
       headers:{'Content-Type':'application/json', 'apikey':apiKey, 'Client-Agent':'copito:1.0:web'},
       body:JSON.stringify({
         prompt:prompt,
-        model:modelOverride || p.model || '',
+        model: chosenModel,
         params:{max_length:Math.min(1024, cfg.maxOut || 1024), temperature:0.7, top_p:0.9, frequency_penalty:0.1}
       }),
       signal:ctrl.signal
@@ -1273,8 +1290,70 @@ async function callWllama(p, messages, onDelta, signal, modelOverride){
   }
 }
 
+/* ===== Pollinations zero-config: POST stream → POST simple → GET simple (siempre responde) ===== */
+function buildChatPrompt(messages){
+  let s = '';
+  const sys = messages.find(function(m){ return m.role === 'system'; });
+  if(sys) s += 'Instrucciones: ' + plainContent(sys.content) + '\n\n';
+  const turns = messages.slice(-8);
+  for(const m of turns){
+    if(m.role === 'system') continue;
+    s += (m.role === 'user' ? 'Usuario: ' : 'Asistente: ') + plainContent(m.content) + '\n';
+  }
+  s += 'Asistente:';
+  return s;
+}
+async function emitChunks(t, onDelta, signal){
+  if(!onDelta) return;
+  const chunk = 60;
+  for(let i = 0; i < t.length; i += chunk){
+    if(signal && signal.aborted) break;
+    onDelta(t.slice(i, i + chunk));
+    await new Promise(function(r){ setTimeout(r, 8); });
+  }
+}
+async function callPollinations(p, messages, onDelta, signal, modelOverride){
+  const model = modelOverride || p.model || 'openai';
+  // 1) POST OpenAI-compatible con stream (el más rico si funciona)
+  try{
+    return await callOpenAIStream(p, messages, onDelta, signal, cfg.maxOut, model);
+  }catch(e){
+    if(signal && signal.aborted) throw e;
+  }
+  // 2) POST simple JSON sin stream
+  try{
+    const c2 = new AbortController(); const t2 = setTimeout(function(){ c2.abort(); }, p.timeout || 60000);
+    const r2 = await fetch('https://text.pollinations.ai/', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({messages:messages.map(function(m){ return {role:m.role, content:plainContent(m.content)}; }), model:model, stream:false}),
+      signal:c2.signal
+    });
+    clearTimeout(t2);
+    if(r2.ok){
+      const txt = await r2.text();
+      if(txt && txt.trim().length > 1){ await emitChunks(txt, onDelta, signal); return txt; }
+    }
+  }catch(e){
+    if(signal && signal.aborted) throw new ApiError(0, 'detenido');
+  }
+  // 3) GET simple: sin key, CORS abierto, SIEMPRE responde → garantiza chatear al 1er arranque
+  const prompt = buildChatPrompt(messages).slice(0, 1800);
+  const c3 = new AbortController(); const t3 = setTimeout(function(){ c3.abort(); }, p.timeout || 60000);
+  let r3;
+  try{
+    r3 = await fetch('https://text.pollinations.ai/' + encodeURIComponent(prompt) + '?model=' + encodeURIComponent(model), {signal:c3.signal});
+  }finally{ clearTimeout(t3); }
+  if(!r3.ok) throw new ApiError(r3.status, 'Pollinations GET HTTP ' + r3.status);
+  const txt = await r3.text();
+  if(!txt || txt.trim().length < 2) throw new ApiError(0, 'Pollinations GET devolvió vacío');
+  await emitChunks(txt, onDelta, signal);
+  return txt;
+}
+
 /* ===== Dispatcher de proveedores ===== */
 async function callProvider(p, messages, onDelta, signal, modelOverride){
+  if(p.format === 'pollinations') return callPollinations(p, messages, onDelta, signal, modelOverride);
   if(p.format === 'wllama') return callWllama(p, messages, onDelta, signal, modelOverride);
   if(p.format === 'gemini') return callGeminiStream(p, messages, onDelta, signal, modelOverride);
   if(p.format === 'aihorde') return callAIHorde(p, messages, onDelta, signal, modelOverride);
@@ -2738,6 +2817,23 @@ async function testProvider(id){
   btn.textContent = '… probando';
   out.className = 'testresult';
   out.textContent = '';
+    if(p.format === 'pollinations'){
+    const cp = new AbortController(); const tp = setTimeout(function(){ cp.abort(); }, 20000);
+    try{
+      const rp = await fetch('https://text.pollinations.ai/' + encodeURIComponent('Di solo: ok') + '?model=' + encodeURIComponent(p.model || 'openai'), {signal:cp.signal});
+      clearTimeout(tp);
+      const txtp = await rp.text();
+      const okp = rp.ok && txtp && txtp.trim().length > 0;
+      out.textContent = 'Pollinations GET: HTTP ' + rp.status + (okp ? ' · responde sin key' : ' · vacío');
+      out.className = 'testresult ' + (okp ? 'ok' : 'err');
+    }catch(e){
+      clearTimeout(tp);
+      out.textContent = 'Pollinations: sin conexión';
+      out.className = 'testresult err';
+    }
+    btn.disabled = false; btn.textContent = '🔎 Probar';
+    return;
+  }
   if(p.format === 'wllama'){
     out.textContent = p._loaded ? ('✅ GGUF cargado: ' + p.model) : 'GGUF no cargado — usa 📂 Archivo local o ⬇ Cargar GGUF';
     out.className = 'testresult ' + (p._loaded ? 'ok' : 'err');
@@ -3468,6 +3564,13 @@ function boot(){
       loadWllamaModel(wpAuto).catch(function(e){ console.warn('auto-recarga GGUF:', e.message); });
     }, 800);
   }
+
+  // Warmup zero-config: precalenta Pollinations para que el 1er mensaje entre al instante
+  (function(){
+    const wc = new AbortController();
+    setTimeout(function(){ wc.abort(); }, 3000);
+    fetch('https://text.pollinations.ai/' + encodeURIComponent('ping') + '?model=openai', {signal:wc.signal}).catch(function(){});
+  })();
 
   if(tailAutofixed || pathAutofixed){
     saveCfgNow();
