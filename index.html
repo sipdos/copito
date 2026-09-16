@@ -1312,43 +1312,71 @@ async function emitChunks(t, onDelta, signal){
     await new Promise(function(r){ setTimeout(r, 8); });
   }
 }
+/* ===== Pollinations zero-config: POST con headers (evita 403) ===== */
+function buildChatPrompt(messages){
+  let s = '';
+  const sys = messages.find(function(m){ return m.role === 'system'; });
+  if(sys) s += 'Instrucciones: ' + plainContent(sys.content) + '\n\n';
+  const turns = messages.slice(-8);
+  for(const m of turns){
+    if(m.role === 'system') continue;
+    s += (m.role === 'user' ? 'Usuario: ' : 'Asistente: ') + plainContent(m.content) + '\n';
+  }
+  s += 'Asistente:';
+  return s;
+}
+async function emitChunks(t, onDelta, signal){
+  if(!onDelta) return;
+  const chunk = 60;
+  for(let i = 0; i < t.length; i += chunk){
+    if(signal && signal.aborted) break;
+    onDelta(t.slice(i, i + chunk));
+    await new Promise(function(r){ setTimeout(r, 8); });
+  }
+}
 async function callPollinations(p, messages, onDelta, signal, modelOverride){
   const model = modelOverride || p.model || 'openai';
-  // 1) POST OpenAI-compatible con stream (el más rico si funciona)
+  // 1) POST OpenAI-compatible con stream
   try{
     return await callOpenAIStream(p, messages, onDelta, signal, cfg.maxOut, model);
   }catch(e){
     if(signal && signal.aborted) throw e;
   }
-  // 2) POST simple JSON sin stream
-  try{
-    const c2 = new AbortController(); const t2 = setTimeout(function(){ c2.abort(); }, p.timeout || 60000);
-    const r2 = await fetch('https://text.pollinations.ai/', {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({messages:messages.map(function(m){ return {role:m.role, content:plainContent(m.content)}; }), model:model, stream:false}),
-      signal:c2.signal
-    });
-    clearTimeout(t2);
-    if(r2.ok){
-      const txt = await r2.text();
-      if(txt && txt.trim().length > 1){ await emitChunks(txt, onDelta, signal); return txt; }
+  // 2) POST simple JSON sin stream, con headers completos
+  const models = [model, 'openai-fast', 'mistral', 'llama'];
+  for(const m of models){
+    try{
+      const c2 = new AbortController(); 
+      const t2 = setTimeout(function(){ c2.abort(); }, p.timeout || 60000);
+      const r2 = await fetch('https://text.pollinations.ai/', {
+        method:'POST',
+        headers:{
+          'Content-Type':'application/json',
+          'User-Agent':'Copito/1.0',
+          'Referer':'https://copito.local'
+        },
+        body:JSON.stringify({
+          messages:messages.map(function(msg){ 
+            return {role:msg.role, content:plainContent(msg.content)}; 
+          }), 
+          model:m, 
+          stream:false
+        }),
+        signal:c2.signal
+      });
+      clearTimeout(t2);
+      if(r2.ok){
+        const txt = await r2.text();
+        if(txt && txt.trim().length > 1){ 
+          await emitChunks(txt, onDelta, signal); 
+          return txt; 
+        }
+      }
+    }catch(e){
+      if(signal && signal.aborted) throw new ApiError(0, 'detenido');
     }
-  }catch(e){
-    if(signal && signal.aborted) throw new ApiError(0, 'detenido');
   }
-  // 3) GET simple: sin key, CORS abierto, SIEMPRE responde → garantiza chatear al 1er arranque
-  const prompt = buildChatPrompt(messages).slice(0, 1800);
-  const c3 = new AbortController(); const t3 = setTimeout(function(){ c3.abort(); }, p.timeout || 60000);
-  let r3;
-  try{
-    r3 = await fetch('https://text.pollinations.ai/' + encodeURIComponent(prompt) + '?model=' + encodeURIComponent(model), {signal:c3.signal});
-  }finally{ clearTimeout(t3); }
-  if(!r3.ok) throw new ApiError(r3.status, 'Pollinations GET HTTP ' + r3.status);
-  const txt = await r3.text();
-  if(!txt || txt.trim().length < 2) throw new ApiError(0, 'Pollinations GET devolvió vacío');
-  await emitChunks(txt, onDelta, signal);
-  return txt;
+  throw new ApiError(0, 'Pollinations: todos los modelos fallaron (403/timeout/vacío). Carga un GGUF local con 📂 o añade una key en ⚙️ Ruteo.');
 }
 
 /* ===== Dispatcher de proveedores ===== */
@@ -2817,14 +2845,19 @@ async function testProvider(id){
   btn.textContent = '… probando';
   out.className = 'testresult';
   out.textContent = '';
-    if(p.format === 'pollinations'){
+  if(p.format === 'pollinations'){
     const cp = new AbortController(); const tp = setTimeout(function(){ cp.abort(); }, 20000);
     try{
-      const rp = await fetch('https://text.pollinations.ai/' + encodeURIComponent('Di solo: ok') + '?model=' + encodeURIComponent(p.model || 'openai'), {signal:cp.signal});
+      const rp = await fetch('https://text.pollinations.ai/', {
+        method:'POST',
+        headers:{'Content-Type':'application/json','User-Agent':'Copito/1.0'},
+        body:JSON.stringify({messages:[{role:'user',content:'Di solo: ok'}],model:p.model||'openai-fast',stream:false}),
+        signal:cp.signal
+      });
       clearTimeout(tp);
       const txtp = await rp.text();
       const okp = rp.ok && txtp && txtp.trim().length > 0;
-      out.textContent = 'Pollinations GET: HTTP ' + rp.status + (okp ? ' · responde sin key' : ' · vacío');
+      out.textContent = 'Pollinations POST: HTTP ' + rp.status + (okp ? ' · responde sin key' : ' · vacío/403');
       out.className = 'testresult ' + (okp ? 'ok' : 'err');
     }catch(e){
       clearTimeout(tp);
@@ -3565,11 +3598,16 @@ function boot(){
     }, 800);
   }
 
-  // Warmup zero-config: precalenta Pollinations para que el 1er mensaje entre al instante
+  // Warmup zero-config: precalenta Pollinations con POST (no GET)
   (function(){
     const wc = new AbortController();
     setTimeout(function(){ wc.abort(); }, 3000);
-    fetch('https://text.pollinations.ai/' + encodeURIComponent('ping') + '?model=openai', {signal:wc.signal}).catch(function(){});
+    fetch('https://text.pollinations.ai/', {
+      method:'POST',
+      headers:{'Content-Type':'application/json','User-Agent':'Copito/1.0'},
+      body:JSON.stringify({messages:[{role:'user',content:'ping'}],model:'openai-fast',stream:false}),
+      signal:wc.signal
+    }).catch(function(){});
   })();
 
   if(tailAutofixed || pathAutofixed){
