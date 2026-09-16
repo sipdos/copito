@@ -197,7 +197,21 @@ body.light .chat-item.active{background:rgba(106,72,255,.12)}
           <input type="file" id="fileInp" accept="image/*,.pdf,.txt,.md,.js,.ts,.json,.py,.html,.css,.csv,.doc,.docx,.xls,.xlsx,.ppt,.pptx" style="display:none" multiple>
           <button id="attachBtn" class="iconbtn" style="width:auto;padding:0 12px;font-size:13px;gap:6px" title="Adjuntar imagen, texto, Word, Excel, PowerPoint o PDF">📎 Adjuntar</button>
           <button id="exportBtn" class="iconbtn" style="width:auto;padding:0 12px;font-size:13px" title="Exportar conversación">⬇ Exportar</button>
-          <button id="searchBtn" class="iconbtn" title="Activar búsqueda en internet" style="color:var(--accent2)">🔍</button>
+          <button id="imageBtn" class="iconbtn" title="Generar imagen con Pollinations (sin key)" style="color:var(--accent)">🎨</button>
+<select id="imageModelSel" style="font-size:11px;padding:4px 6px;max-width:110px;display:none" title="Modelo de imagen">
+  <option value="flux">flux (general)</option>
+  <option value="flux-realism">flux-realism</option>
+  <option value="flux-anime">flux-anime</option>
+  <option value="flux-3d">flux-3d</option>
+  <option value="turbo">turbo (rápido)</option>
+</select>
+<select id="imageSizeSel" style="font-size:11px;padding:4px 6px;max-width:90px;display:none;margin-left:4px" title="Tamaño">
+  <option value="1024x1024">1024²</option>
+  <option value="1280x720">1280×720</option>
+  <option value="720x1280">720×1280</option>
+  <option value="1024x1792">1024×1792</option>
+</select>
+		  <button id="searchBtn" class="iconbtn" title="Activar búsqueda en internet" style="color:var(--accent2)">🔍</button>
           <textarea id="inp" rows="1" placeholder="Escribe un mensaje… (Enter = enviar, Shift+Enter = salto de línea)"></textarea>
           <button id="stop" title="Detener generación">⏹</button>
           <button id="send" title="Enviar">➤</button>
@@ -404,6 +418,8 @@ function statsAdd(k){var s=statsGet();s[k]=(s[k]||0)+1;try{localStorage.setItem(
 var $=function(id){return document.getElementById(id);};
 var chatEl=$('chat'),inp=$('inp'),sendBtn=$('send'),stopBtn=$('stop'),spinner=$('spinner'),statusEl=$('status'),routeInfo=$('routeInfo'),modelSel=$('modelSel'),chatList=$('chatList'),fileInp=$('fileInp'),attachBtn=$('attachBtn'),searchBtn=$('searchBtn'),scrollDownBtn=$('scrollDown');
 var isBusy=false,stopCtrl=null,pendingFiles=[],chatStartTime=0,searchCache={},searchMode=false,searchCtrl=null;
+var searchMode=false,searchCtrl=null;
+var imageMode=false;
 var stickToBottom=true;
 var frankMode=false;
 
@@ -2285,6 +2301,18 @@ function loadChat(id){
   for(var m of activeChat.msg){
     var role = m.role === 'user' ? 'user' : 'assistant';
     var el = appendMsg(role, md(displayContent(m.content)), null, m.role === 'user' ? m.content : undefined);
+	  if(m._image){
+      var img = m._image;
+      var el = appendMsg('assistant',
+        '<div style="margin-bottom:8px;font-size:13px"><b>🎨</b> ' + esc(img.prompt) + '</div>' +
+        '<img src="' + esc(img.url) + '" alt="' + esc(img.prompt) + '" style="max-width:100%;border-radius:10px;border:1px solid var(--border);cursor:pointer" onclick="window.open(this.src,\'_blank\')">',
+        null);
+      el.querySelector('.bubble').insertAdjacentHTML('beforeend',
+        '<div class="meta"><span>' + esc(img.model) + ' · ' + esc(img.size) + ' · seed ' + img.seed + '</span>' +
+        '<span class="actions"><a class="copybtn" href="' + esc(img.url) + '" download="copito-' + img.seed + '.jpg" style="text-decoration:none">⬇ Descargar</a>' +
+        '<button class="copybtn" onclick="copyText(\'' + esc(img.prompt.replace(/'/g,"\\'")) + '\',this)">📋 Prompt</button></span></div>');
+      continue;
+    }
     if(role === 'assistant'){
       var metaHtml = '<div class="meta">';
       if(m._metrics){
@@ -3523,6 +3551,71 @@ async function runAgentic(text, webNote){
   setStatus('🤖 ciclo agéntico completo', false);
 }
 
+/* ===== Generación de imágenes con Pollinations (sin key, CORS OK) ===== */
+function buildImageUrl(prompt, model, size, seed){
+  var dims = (size || '1024x1024').split('x');
+  var w = parseInt(dims[0], 10) || 1024;
+  var h = parseInt(dims[1], 10) || 1024;
+  var s = seed || Math.floor(Math.random() * 1000000);
+  var params = new URLSearchParams({
+    width: String(w),
+    height: String(h),
+    model: model || 'flux',
+    nologo: 'true',
+    seed: String(s),
+    enhance: 'true'
+  });
+  return 'https://image.pollinations.ai/prompt/' + encodeURIComponent(prompt) + '?' + params.toString();
+}
+async function generateImage(prompt){
+  var model = $('imageModelSel') ? $('imageModelSel').value : 'flux';
+  var size  = $('imageSizeSel') ? $('imageSizeSel').value : '1024x1024';
+  var seed  = Math.floor(Math.random() * 1000000);
+  var url   = buildImageUrl(prompt, model, size, seed);
+
+  var botEl = appendMsg('assistant', '', '🎨 Pollinations · ' + model + ' · ' + size);
+  var bubble = botEl.querySelector('.bubble');
+  bubble.innerHTML = '<div style="color:var(--dim);font-size:13px">🎨 generando imagen: <i>' + esc(prompt) + '</i>…</div>';
+
+  try{
+    var ctrl = new AbortController();
+    var t = setTimeout(function(){ ctrl.abort(); }, 90000);
+    var r = await fetch(url, {signal: ctrl.signal});
+    clearTimeout(t);
+    if(!r.ok) throw new Error('Pollinations image HTTP ' + r.status);
+    var blob = await r.blob();
+    var objUrl = URL.createObjectURL(blob);
+
+    bubble.innerHTML =
+      '<div style="margin-bottom:8px;font-size:13px"><b>🎨</b> ' + esc(prompt) + '</div>' +
+      '<img src="' + objUrl + '" alt="' + esc(prompt) + '" style="max-width:100%;border-radius:10px;border:1px solid var(--border);cursor:pointer" onclick="window.open(this.src,\'_blank\')">' +
+      '<div class="meta" style="margin-top:10px">' +
+        '<span>' + esc(model) + ' · ' + esc(size) + ' · seed ' + seed + '</span>' +
+        '<span class="actions">' +
+          '<a class="copybtn" href="' + objUrl + '" download="copito-' + seed + '.jpg" style="text-decoration:none">⬇ Descargar</a>' +
+          '<button class="copybtn" data-regen="' + esc(prompt) + '">🔄 Regenerar</button>' +
+          '<button class="copybtn" onclick="copyText(\'' + esc(prompt.replace(/'/g,"\\'")) + '\',this)">📋 Prompt</button>' +
+        '</span>' +
+      '</div>';
+
+    var regenBtn = bubble.querySelector('[data-regen]');
+    if(regenBtn){
+      regenBtn.onclick = function(){
+        var p = regenBtn.getAttribute('data-regen');
+        inp.value = p;
+        if(!imageMode){ document.getElementById('imageBtn').click(); }
+        send();
+      };
+    }
+
+    activeChat.msg.push({role:'assistant', content:'🎨 Imagen generada: ' + prompt, _image:{url:url, prompt:prompt, model:model, size:size, seed:seed}});
+    persist();
+  }catch(e){
+    bubble.innerHTML = '<span style="color:var(--err)">No se pudo generar la imagen: ' + esc(limitMsg(e)) + '</span>';
+  }
+  setStatus('🎨 imagen lista', false);
+}
+
 /* ===== Arranque ===== */
 function boot(){
   try{
@@ -3712,6 +3805,23 @@ function boot(){
     $('wizardBanner').style.display = 'none';
   };
 
+  var imageBtn = $('imageBtn');
+  var imgModelSel = $('imageModelSel');
+  var imgSizeSel = $('imageSizeSel');
+  imageBtn.onclick = function(){
+    imageMode = !imageMode;
+    imageBtn.textContent = imageMode ? '🖼' : '🎨';
+    imageBtn.title = imageMode ? 'Modo imagen ACTIVO: escribe el prompt y Enter' : 'Activar modo imagen (Pollinations)';
+    imageBtn.style.background = imageMode ? 'rgba(124,92,255,.15)' : 'var(--bg3)';
+    imageBtn.style.borderColor = imageMode ? 'var(--accent)' : 'var(--border)';
+    imgModelSel.style.display = imageMode ? 'inline-block' : 'none';
+    imgSizeSel.style.display  = imageMode ? 'inline-block' : 'none';
+    inp.placeholder = imageMode
+      ? '🎨 Modo imagen: describe lo que quieres dibujar (p.ej. "un gato astronauta en el espacio")'
+      : 'Escribe un mensaje… (Enter = enviar, Shift+Enter = salto de línea)';
+    if(imageMode) inp.focus();
+  };
+
   searchBtn.onclick = function(){
     searchMode = !searchMode;
     searchBtn.textContent = searchMode ? '🌐' : '🔍';
@@ -3833,6 +3943,24 @@ async function send(){
   }
   inp.value = '';
   inp.style.height = 'auto';
+    if(!imageMode && /^(dibuja|genera|crea|pinta|ilustra|render|generate|create|make|paint)\b.{5,120}(imagen|picture|image|foto|ilustración|arte|art)\b/i.test(text)){
+    imageMode = true;
+    imageBtn.click();  // actualiza UI
+    // y re-entra con imageMode ya activo
+    return send();
+  }
+    if(imageMode){
+    imageMode = false;
+    imageBtn.textContent = '🎨';
+    imageBtn.style.background = 'var(--bg3)';
+    imageBtn.style.borderColor = 'var(--border)';
+    $('imageModelSel').style.display = 'none';
+    $('imageSizeSel').style.display  = 'none';
+    inp.placeholder = 'Escribe un mensaje… (Enter = enviar, Shift+Enter = salto de línea)';
+    appendMsg('user', md('🎨 ' + text), null, text);
+    await generateImage(text);
+    return;
+  }
   if(agentMode){ await runAgentic(finalText, webNote); } else { await runChat(finalText, webNote); }
 }
 
