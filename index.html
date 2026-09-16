@@ -383,9 +383,12 @@ function loadCfg(){
     if(typeof rawObj.wizardDone==='boolean')c.wizardDone=rawObj.wizardDone;
   }
   for(var p of c.providers){p.base=tailFix(pathFix(p.base));p.modelsUrl=tailFix(pathFix(p.modelsUrl||''));}
-  // Puter ya no es anónimo (pide teléfono) y no funciona desde file:// → fuera de la cadena por defecto
-  var pu = c.providers.find(function(x){ return x.id === 'puter'; });
-  if(pu){ pu.enabled = false; }
+  // Motores zero-config MUERTOS/DEPRECADOS en 2026 → desactivados por defecto para no quemar tiempo
+  var DEAD = ['pollinations','duckduckgo','puter','llm7','uncloseai','kiloai','huggingface-anon'];
+  for(var d of DEAD){
+    var pp = c.providers.find(function(x){ return x.id === d; });
+    if(pp) pp.enabled = false;
+  }
   return c;
 }
 
@@ -817,7 +820,7 @@ async function callAIHorde(p, messages, onDelta, signal, modelOverride){
       body:JSON.stringify({
         prompt:prompt,
         model: chosenModel,
-        params:{max_length: anon ? 480 : Math.min(1024, cfg.maxOut || 1024), temperature:0.7, top_p:0.9, frequency_penalty:0.1}
+        params:{max_length: anon ? 300 : Math.min(1024, cfg.maxOut || 1024), temperature:0.7, top_p:0.9, frequency_penalty:0.1}
       }),
       signal:ctrl2.signal
     });
@@ -831,7 +834,7 @@ async function callAIHorde(p, messages, onDelta, signal, modelOverride){
     var t0 = Date.now();
     while(Date.now() - t0 < (p.timeout || 180000)){
       if(ctrl2.signal.aborted || (signal && signal.aborted)) throw ApiError(0, 'detenido');
-      await new Promise(function(r){ setTimeout(r, 12000); });
+      await new Promise(function(r){ setTimeout(r, 4000); });
       if(ctrl2.signal.aborted || (signal && signal.aborted)) throw ApiError(0, 'detenido');
       var st = await fetch(p.base + '/status/' + sj.id, {
         headers:{apikey:apiKey, 'Client-Agent':'copito:1.0:web'},
