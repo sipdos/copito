@@ -5,8 +5,9 @@
 [![Un solo archivo](https://img.shields.io/badge/archivo-%C3%BAnico%20index.html-blue)](#)
 [![Offline](https://img.shields.io/badge/offline-GGUF%20%2B%20sandbox%20%2B%20VM-orange)](#)
 [![Ruteo](https://img.shields.io/badge/ruteo-OmniRoute%20style-purple)](#)
+[![Imágenes](https://img.shields.io/badge/im%C3%A1genes-Pollinations%20sin%20key-ff6b9d)](#)
 
-Copito es un cliente de chat **autocontenido** (un solo `index.html`) con **ruteo inteligente tipo OmniRoute** (rotación, circuit-breaker, traspaso de sesión y compactación), **modelos GGUF locales en el navegador** (incluidos **MoE**), **entornos de ejecución embebidos** para que el agente pruebe su propio código **desatendido**, y una cadena de **motores sin key** que se auto-diagnostica: los que mueren entran en cooldown y Copito salta al siguiente vivo.
+Copito es un cliente de chat **autocontenido** (un solo `index.html`) con **ruteo inteligente tipo OmniRoute** (rotación, circuit-breaker, traspaso de sesión y compactación), **modelos GGUF locales en el navegador** (incluidos **MoE**), **entornos de ejecución embebidos** para que el agente pruebe su propio código **desatendido**, **generación de imágenes sin key** vía Pollinations, y una cadena de **motores sin key** que se auto-diagnostica: los que mueren entran en cooldown y Copito salta al siguiente vivo.
 
 > **Ábrelo por `http://` (no `file://`), escribe y chatea.** Lo demás es opcional.
 
@@ -22,14 +23,14 @@ Copito es un cliente de chat **autocontenido** (un solo `index.html`) con **rute
 
 Con cualquiera de las tres, **el primer mensaje entra sin configurar keys ni wizard**. Copito además precarga y rota: si un motor falla, rota al siguiente y lo pone en *cooldown* para que el siguiente mensaje ya no pierda tiempo.
 
-### ⚠️ Realidad de los endpoints "sin key" (septiembre 2026)
+### ⚠️ Realidad de los endpoints "sin key" para **texto** (septiembre 2026)
 
 Los endpoints públicos anónimos **mueren rápido**. Estado verificado en vivo desde Copito:
 
 | Motor | Estado | Motivo |
 |---|---|---|
 | **AI Horde** (anónimo ≤512 tok) | ✅ **VIVO** | Cola comunitaria; lento pero fiable |
-| **Pollinations** | ❌ muerto | Ahora exige CAPTCHA Turnstile (`403 Missing Turnstile token`) |
+| **Pollinations** (texto) | ❌ muerto | Ahora exige CAPTCHA Turnstile (`403 Missing Turnstile token`) |
 | **DuckDuckGo AI (Duck.ai)** | ❌ muerto desde navegador | Token VQD + anti-bot; los proxies CORS no pasan el preflight |
 | **Puter.js** | ❌ ya no anónimo | Pide cuenta/verificación de teléfono |
 | **LLM7.io** | ❌ muerto | `400 Bad Request` a clientes anónimos |
@@ -41,14 +42,33 @@ Por eso Copito los trae **desactivados por defecto** y con *circuit-breaker*: si
 
 ---
 
+## 🎨 Generación de imágenes sin key
+
+La API de **imágenes de Pollinations** (a diferencia de la de texto) **sigue funcionando sin key ni CAPTCHA**, con CORS abierto. Copito la integra de forma nativa:
+
+- **Botón 🎨** al lado de 🔍 → activa el "modo imagen"
+- Escribes el prompt y Enter → la imagen aparece inline en ~8 s
+- **5 modelos**: `flux` (general), `flux-realism` (fotorrealista), `flux-anime`, `flux-3d`, `turbo` (rápido)
+- **Tamaños configurables**: 1024², 1280×720, 720×1280, 1024×1792
+- **Detección automática** (opcional): frases como *"genera una imagen de un bosque al atardecer"* activan el modo solo
+- Sobre cada imagen: **⬇ Descargar** · **🔄 Regenerar** (nuevo seed) · **📋 Copiar prompt**
+- Las imágenes quedan **guardadas en la memoria del chat** (se restauran al recargar)
+
+**Ejemplos que funcionan al instante:**
+- *"un samurái con máscara roja en una ciudad cyberpunk, estilo anime"*
+- *"un astronauta flotando sobre la Tierra al atardecer, estilo acuarela"*
+- *"retrato fotorrealista de una anciana leyendo en un parque de Tokio, luz dorada"*
+
+---
+
 ## 📸 Capturas
 
 | | |
 |:---:|:---:|
 | ![Chat](docs/img/01-chat-gguf.png) | ![Ruteo](docs/img/02-ruteo.png) |
 | *Chat con GGUF local, métricas tok/s y código coloreado* | *Panel de ruteo con tarjetas por motor y auto-keys* |
-| ![Terminal](docs/img/03-terminal.png) | ![Agéntico](docs/img/04-agentico.png) |
-| *Terminal colapsable: el agente ejecuta y verifica solo* | *Ciclo agéntico con entorno de ejecución* |
+| ![Imágenes](docs/img/05-imagen.png) | ![Agéntico](docs/img/04-agentico.png) |
+| *Modo 🎨: imagen inline con descarga y regenerar* | *Ciclo agéntico con entorno de ejecución* |
 
 > Genera las capturas con `F12` → `Ctrl+Shift+P` → *"Capture full size screenshot"* y guárdalas en `docs/img/`.
 
@@ -101,10 +121,11 @@ Inferencia en **CPU**, **WebGPU** o **🧩 Split GPU+CPU** (capas repartidas, `n
 | `➤ / Enter` | Envía | siempre |
 | `🔀 Auto` | Rota motores solo | por defecto |
 | `📂` | Carga GGUF local | para offline/instantáneo |
+| `🎨` | **Genera imagen** con Pollinations (sin key) | dibujar/crear arte |
 | `🐧` | Arranca/oculta la VM Linux | solo si el agente necesita `apt/npm/git` reales |
 | `🤖` | Modo agéntico (4 roles + entornos) | tareas de razonar-probar-verificar |
-| `🔍/` | Búsqueda web (Google/Bing/DDG) inyectada al modelo | datos de actualidad |
-| `🔒/` | Modo franco (tono directo) | cuando quieras crudeza; combina con GGUF *abliterated* |
+| `🔍/🌐` | Búsqueda web (Google/Bing/DDG) inyectada al modelo | datos de actualidad |
+| `🔒/🔓` | Modo franco (tono directo) | cuando quieras crudeza; combina con GGUF *abliterated* |
 | `🧠` | Ver/descargar memoria del chat | auditar o respaldar |
 | `⬇ Exportar` | MD / JSON / CSV / PDF / Word / PowerPoint | llevarte la conversación |
 | `🧑 Humanizar` | Reescribe con tono natural | respuestas robóticas |
@@ -142,7 +163,7 @@ powershell -ExecutionPolicy Bypass -File .\setup_v86.ps1       # VM Linux embebi
 copito_server.bat      # Windows → http://localhost:8080
 ./copito_server.sh     # Mac/Linux
 ```
-**No abras `index.html` con `file://`:** varios motores, los proxies CORS y el VM requieren `http://`. El GGUF local y tu endpoint propio sí funcionan desde `file://`, pero Copito te avisa.
+**No abras `index.html` con `file://`:** varios motores, los proxies CORS y el VM requieren `http://`. El GGUF local, tu endpoint propio y las imágenes 🎨 sí funcionan desde `file://` (aunque Copito te avisa por los demás).
 
 ---
 
@@ -151,11 +172,13 @@ copito_server.bat      # Windows → http://localhost:8080
 | Síntoma | Causa / arreglo |
 |---|---|
 | Primer mensaje lento (~1 min) | Rotación probando motores muertos → ya mitigado con cooldown; verifica que tu GGUF o custom estén activos |
-| `Missing Turnstile token` | Pollinations murió (CAPTCHA): desactívalo en ⚙️ o ignóralo (ya viene off) |
+| `Missing Turnstile token` | Pollinations **texto** murió (CAPTCHA): desactivado por defecto; ignóralo |
+| `🎨 Imagen` no aparece | Verifica conexión a `image.pollinations.ai` (esa API SÍ funciona sin Turnstile) |
 | Popup de Puter pidiendo teléfono | Puter ya no es anónimo: déjalo desactivado |
-| `ERR_NAME_NOT_RESOLVED` en algún motor | Endpoint retirado: Copito lo enfría solo; no hace nada |
+| `ERR_NAME_NOT_RESOLVED` en algún motor | Endpoint retirado: Copito lo enfría solo |
 | Wllama no carga en USB/Red | Copia el `.gguf` a disco interno y usa "URL directa" + ⬇ |
 | VM 🐧 no arranca | Ejecuta `setup_v86.ps1` y sirve por `http://` |
+| Errores en F12 de `content.js` / `extInfoFrame.js` | Son extensiones del navegador (gestor de contraseñas, banca, etc.); no afectan a Copito |
 
 ---
 
@@ -176,7 +199,7 @@ copito/
 
 ## 🔒 Privacidad
 
-Keys y configuración **solo en tu navegador**. GGUF, sandbox y VM **nunca salen de tu máquina**. Sin telemetría ni backend propio.
+Keys y configuración **solo en tu navegador**. GGUF, sandbox y VM **nunca salen de tu máquina**. Las imágenes generadas viajan solo a `image.pollinations.ai` (sin tracking). Sin telemetría ni backend propio.
 
 ## 📜 Licencia
 
