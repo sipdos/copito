@@ -383,6 +383,9 @@ function loadCfg(){
     if(typeof rawObj.wizardDone==='boolean')c.wizardDone=rawObj.wizardDone;
   }
   for(var p of c.providers){p.base=tailFix(pathFix(p.base));p.modelsUrl=tailFix(pathFix(p.modelsUrl||''));}
+  // Puter ya no es anónimo (pide teléfono) y no funciona desde file:// → fuera de la cadena por defecto
+  var pu = c.providers.find(function(x){ return x.id === 'puter'; });
+  if(pu){ pu.enabled = false; }
   return c;
 }
 
@@ -950,6 +953,14 @@ async function ddgFetchVqd(){
       if(m) return m[1];
     }
   }catch(e){}
+    // Estrategia C: corsproxy al endpoint status (a veces expone el header)
+  try{
+    var rc = await fetch('https://corsproxy.io/?url=' + encodeURIComponent('https://duckduckgo.com/duckchat/v1/status'), {
+      headers:{'x-vqd-accept':'1'}
+    });
+    var vc = rc.headers.get('x-vqd-4');
+    if(vc) return vc;
+  }catch(e){}
   return null;
 }
 async function callDuckDuckGo(p, messages, onDelta, signal, modelOverride){
@@ -1026,6 +1037,7 @@ function loadScript(src){
   });
 }
 async function callPuter(p, messages, onDelta, signal, modelOverride){
+  if(location.protocol === 'file:') throw ApiError(0, 'Puter.js no funciona desde file:// (y ahora pide cuenta): desactivado');
   if(!window.puter){
     await loadScript('https://js.puter.com/v2/');
   }
@@ -1542,6 +1554,13 @@ function markExhausted(pid, model, reason){
   quotaSet(q);
   setStatus('🚫 cupo agotado en ' + model + ' → rotando (cooldown 15 min)', true);
 }
+
+function markExhaustedShort(pid, model, reason){
+  var q = quotaGet();
+  q[quotaKey(pid, model)] = {until:Date.now() + 2 * 60 * 1000, reason:reason || 'net', ts:Date.now()};
+  quotaSet(q);
+}
+
 function isQuotaError(e){
   if(!e) return false;
   if(e.status === 402 || e.status === 429) return true;
@@ -1938,7 +1957,8 @@ async function runChat(text, webNote){
     try{
       statsAdd(current.id);
       statsAdd(quotaKey(current.id, cmodel));
-      var result = await callProvider(current, messages, onDelta, sig, cmodel);
+      var motorTimeout = (current.format === 'aihorde') ? (current.timeout || 180000) : (current.keyless ? 15000 : (current.timeout || 60000));
+      var result = await withTimeout(callProvider(current, messages, onDelta, sig, cmodel), motorTimeout, current.name + ' tardó >' + Math.round(motorTimeout/1000) + 's');
       if(result && result.length > full.length){
         botEl.classList.remove('typing');
         full = result;
@@ -1971,6 +1991,8 @@ async function runChat(text, webNote){
             messages.push.apply(messages, saved);
           }catch(e2){}
         }
+      } else if(current.keyless){
+        markExhaustedShort(current.id, cmodel, msg);
       }
     }
   }
@@ -3769,7 +3791,9 @@ function boot(){
     fetch('https://text.pollinations.ai/' + encodeURIComponent('ping') + '?model=openai', {signal:wc.signal}).catch(function(){});
     fetch('https://api.llm7.io/v1/models', {signal:wc.signal}).catch(function(){});
   })();
-
+  if(location.protocol === 'file:'){
+    setStatus('⚠️ abierto desde file://: varios motores zero-config y el VM necesitan http. Ejecuta copito_server.bat (o sube a Pages). Tu GGUF local y tu endpoint custom sí funcionan aquí.', true);
+  }
   if(tailAutofixed || pathAutofixed){
     saveCfgNow();
     var fixes = [];
