@@ -1,129 +1,123 @@
 # 🦙 Copito — Chat multi-modelo sin límites, en un solo HTML
 
-Copito es un cliente de chat **autocontenido** (un solo `index.html`) con **ruteo inteligente tipo OmniRoute**: rota y combina proveedores de IA (sin key, con key gratuita, endpoints OpenAI-compatible propios y **modelos GGUF locales en el navegador**) preservando tu sesión y traspasándola de un modelo a otro sin que notes el cambio. Además integra **entornos de ejecución** para que el agente pruebe su propio código de forma **desatendida**.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Sin backend](https://img.shields.io/badge/backend-ninguno-brightgreen)](#)
+[![Un solo archivo](https://img.shields.io/badge/archivo-%C3%BAnico%20index.html-blue)](#)
+[![Offline](https://img.shields.io/badge/offline-GGUF%20%2B%20sandbox%20%2B%20VM-orange)](#)
+[![Zero-config](https://img.shields.io/badge/zero--config-chatea%20al%20abrir-success)](#)
 
-> **Un archivo. Cero servidores obligatorios. Cero cuentas obligatorias.** Ábrelo y chatea.
+Copito es un cliente de chat **autocontenido** (un solo `index.html`) que **chatea desde el primer segundo, sin keys ni registro**, y que además puede **ejecutar y verificar código él solo** en entornos de desarrollo embebidos en el navegador.
+
+> **Ábrelo y escribe.** Eso es todo. Lo demás es opcional y se activa cuando tú quieras.
 
 ---
 
-## ✨ Características principales
+## 🚀 Arranca y chatea (0 configuración)
 
-### 🔀 Ruteo tipo OmniRoute
-- **Auto-selección de modelo**: el modo `🔀 Auto` rota solo entre todos los proveedores y modelos activos según la estrategia elegida.
-- **Estrategias configurables**: `priority` (keyless primero), `round-robin`, `least-used`, `random`.
-- **Detección de cupo agotado**: reconoce 402/429/"budget exceeded" y aplica *cooldown* de 15 min por modelo.
-- **Preservación y traspaso de sesión**: si un modelo se agota o falla a mitad de conversación, Copito **compacta el contexto (context-relay)** y **continúa la misma sesión en el siguiente modelo disponible**, sin perder el hilo.
-- **Compactación automática**: al crecer el contexto o agotarse un cupo, resume la conversación y conserva los últimos mensajes.
+Al abrir Copito **ya puedes chatear**: usa **Pollinations sin key** con un triple mecanismo de respaldo (POST stream → POST simple → GET simple) que garantiza respuesta inmediata la primera vez. Si Pollinations fallara, rota solo a **AI Horde** (también sin key). **No hay wizard obligatorio, no hay keys que poner, no hay nada que configurar.**
 
-### 🔑 Auto-keys y configuración asistida
-- **Wizard inicial 🧙**: configuración guiada, opcional y repetible.
-- **Auto-keys**: `🔑 Key gratis` abre la página oficial del proveedor y `📥 Pegar` lee tu key del portapapeles, la guarda localmente, activa el proveedor y prueba el endpoint en un clic.
-- **Zero-config real**: sin tocar nada ya funciona con **Pollinations + AI Horde** (sin key ni registro).
+- **Con internet:** chatea al instante con modelos remotos gratuitos.
+- **Sin internet:** carga un GGUF local (📂) y chatea 100% offline; los entornos de ejecución (sandbox/VM) también funcionan offline.
 
-### 🧠 GGUF local en el navegador (Wllama)
-- Carga modelos `.gguf` desde tu disco (**📂 Archivo local**, método Blob sin Service Worker) o desde `modelos/` / HuggingFace / URL directa.
-- Inferencia **100% offline** en **CPU**, **WebGPU** o **🧩 Split GPU+CPU** (capas repartidas, `n_gpu_layers` configurable).
-- **Hilos CPU configurables** (`wthr`) y batches adaptativos al tamaño del modelo y a tu RAM.
-- **Visión local con `mmproj`**: el modelo "ve" tus imágenes (Qwen2-VL, Moondream…).
-- Detección automática de iGPU débil (Intel integrada) y *watchdog* con auto-fallback a CPU si la GPU se cuelga.
-- Validación de integridad del runtime wasm (detecta archivos corruptos).
+---
 
-### 🐧 Entornos de ejecución para el agente (desatendidos)
-| Entorno | Disponibilidad | Capacidades |
+## 📸 Capturas
+
+| | |
+|:---:|:---:|
+| ![Chat](docs/img/01-chat-gguf.png) | ![Ruteo](docs/img/02-ruteo.png) |
+| *Chat con GGUF local, métricas tok/s y código coloreado* | *Panel de ruteo OmniRoute con auto-keys y Wllama* |
+| ![Terminal](docs/img/03-terminal.png) | ![Agéntico](docs/img/04-agentico.png) |
+| *Terminal colapsable: el agente ejecuta y verifica solo* | *Ciclo agéntico con entorno de ejecución* |
+
+> Genera las capturas con `F12` → `Ctrl+Shift+P` → *"Capture full size screenshot"* y guárdalas en `docs/img/`.
+
+---
+
+##  Entorno de desarrollo y pruebas en el navegador (sandbox + Linux real)
+
+Copito incluye **entornos de ejecución embebidos** que el **modo agéntico 🤖 usa solo, sin que tú toques nada**: escribe código, lo ejecuta, lee la salida, se corrige y te entrega el resultado **verificado**.
+
+| Entorno | ¿Cuándo está? | Qué puede hacer |
 |---|---|---|
-| **Sandbox JS** (Worker) | Siempre, offline | Ejecuta JavaScript y lee stdout/errores |
-| **Bash simulado** | Siempre, offline | `ls cd pwd cat echo mkdir rm cp mv find grep head tail wc date env…` |
-| **Pyodide (Python)** | Offline con `./pyodide/`, o online vía CDN | Python completo + `micropip`/`loadPackage` (pip) |
-| **Linux real embebido (v86)** | Offline con `./v86/` | Shell real por puerto serial; el agente escribe, ejecuta y lee **solo**. Soporta `apt/npm/git` si tu imagen los trae |
-| **WebVM (CheerpX/Debian)** | Online, en pestaña | Referencia visual con Debian completo (no controlable por el agente) |
+| **Sandbox JS** (Worker aislado) | **Siempre, offline** | Ejecutar JavaScript y leer `console.log`/errores |
+| **Bash simulado** | **Siempre, offline** | `ls cd pwd cat echo mkdir rm cp mv find grep head tail wc date env…` sobre un mini-filesystem |
+| **Pyodide (Python)** | Offline con `./pyodide/`; online vía CDN | Python completo + **pip** (`micropip.install`, `loadPackage`) |
+| **VM Linux real (v86)** | Offline con `./v86/` | Shell real por puerto serial; `apt/npm/git` si tu imagen los trae |
 
-- **Terminal colapsable 🐧**: por defecto cerrado; ábrelo con la flechita solo si quieres ver al agente trabajar.
-- **Loop autónomo**: en modo 🤖, si la tarea requiere pruebas, el agente genera código → lo ejecuta en el mejor entorno disponible → lee la salida → se auto-corrige (hasta 2 iteraciones) → entrega el resultado **verificado**.
+- **Offline:** sandbox JS + bash simulado (+ Pyodide si descargaste `pyodide/`).
+- **Online:** se suman Pyodide vía CDN y, si arrancas 🐧, la VM Linux con paquetes reales.
+- **Terminal colapsable 🐧:** cerrado por defecto; ábrelo con la flechita solo si quieres **ver** al agente trabajar (incluida la pantalla del VM). Si no lo abres, el agente trabaja igual, a ciegas para ti.
 
-### 🌐 Búsqueda web multi-motor
-- **Google → Bing → Bing(html) → DuckDuckGo → DDG-Lite**, vía proxies CORS sin key (`r.jina.ai`, `allorigins`).
-- Wikipedia solo como último recurso.
-- Resultados **inyectados al modelo** con citas obligatorias.
-
-### 🛠 Totalmente configurable
-- Tarjeta por proveedor: modelo, key, base URL, URL de modelos, activar/desactivar, probar, eliminar.
-- Preferencias globales: estrategia, **contexto total (n_ctx)**, **longitud máx de respuesta**, modelo por defecto, auto-compactación, tema.
-- Endpoints OpenAI-compatible ilimitados (gateways propios, OmniRoute desplegado, etc.).
-- Atajos: `Esc` cierra · `Ctrl+S` guarda.
-
-### 🎭 Modo franco 🔓
-- System prompt de tono **directo, sin rodeos ni moralina**, activable con un botón.
-- Para crudeza *real* en local, combínalo con GGUFs **abliterated/uncensored**.
-
-### 🧾 Memoria y transparencia
-- **Ver memoria 🧠**: inspecciona la conversación en Markdown o JSON crudo, y descárgala.
-- **Métricas en vivo** por respuesta: `⚡ tok/s · tokens · tiempo`, persistidas en el historial.
-- **Historial** con títulos automáticos, editar/reenviar y copiar.
-
-### 📎 Entrada y salida ricas
-- **Adjuntos**: imágenes, texto, **Word, Excel, PowerPoint y PDF** (extracción integrada).
-- **Exportar**: Markdown, JSON, CSV, PDF (imprimir), Word y PowerPoint.
-- **Humanizar 🧑**: reescribe cualquier respuesta con tono natural, como respuesta nueva con sus propias métricas.
-
-### 🎨 UI
-- Tema claro/oscuro, responsive (móvil con sidebar ☰), numeración y coloreado de código, indicador "pensando" con verbos rotativos, stop ⏹ inmediato y scroll inteligente ↓.
+**Cómo se usa:** activa 🤖 y pide algo ejecutable, p.ej. *"verifica cuántos primos hay menores de 10000"* o *"crea un archivo y lista la carpeta"*. El agente elige el mejor entorno disponible, ejecuta, y si falla se auto-corrige (hasta 2 intentos) antes de responderte.
 
 ---
 
-## 🚀 Uso rápido
+## 🧠 Modelos soportados (incluye MoE)
 
-### Opción A — GitHub Pages (recomendado)
-1. Entra a la URL publicada del repo (ver *Deploy* abajo).
-2. Escribe y listo: `🔀 Auto` rota proveedores sin key automáticamente.
-3. Para GGUF local: pulsa **📂** y elige tu `.gguf` (método Blob, sin servidor).
+Copito corre **cualquier GGUF** que soporte llama.cpp/wllama, incluidos los **Mixture-of-Experts (MoE)**:
 
-### Opción B — Local (offline total)
-```bash
-# Windows
-copito_server.bat
-# Mac / Linux
-./copito_server.sh
-```
-Abre `http://localhost:8080` y carga tu GGUF con **📂** o desde `modelos/`. Con el WiFi apagado sigue chateando y ejecutando código en los entornos locales.
+- **MoE recomendados:** `OLMoE-1B-7B-Instruct` (7B totales / 1B activos → velocidad de modelo pequeño con calidad superior), `Qwen1.5-MoE-A2.7B`, `JetMoE-8B`.
+- **Densos recomendados:** Llama-3.2-1B/3B, Qwen2.5-1.5B, SmolLM2-1.7B, Phi-4-mini.
+- **Con visión:** Qwen2-VL-2B o Moondream2 + su archivo `mmproj` (el modelo "ve" tus imágenes).
+
+Los MoE se cargan igual que cualquier GGUF (📂 o URL directa); wllama rutea los expertos internamente. En máquinas con poca RAM, usa `🖥️ CPU` y `n_ctx 2048`.
 
 ---
 
-## 📦 Setup de componentes opcionales (una sola vez, luego offline)
+## 🔀 Ruteo tipo OmniRoute
 
-```bash
-# Runtime wllama 3.6.1 (GGUF local)
-powershell -ExecutionPolicy Bypass -File setup_wllama.ps1   # o ./setup_wllama.sh
-# Repara un wasm corrupto si fuera necesario
-powershell -ExecutionPolicy Bypass -File fix_wllama.ps1
-
-# Python offline con pip (Pyodide)
-powershell -ExecutionPolicy Bypass -File setup_pyodide.ps1
-
-# Linux real embebido para el agente (v86)
-powershell -ExecutionPolicy Bypass -File setup_v86.ps1
-```
-
-Tras cada setup, el componente queda en su carpeta (`wllama/`, `pyodide/`, `v86/`) y funciona **sin internet**.
+- **🔀 Auto:** rota solo entre proveedores y modelos según la estrategia (`priority`, `round-robin`, `least-used`, `random`).
+- **Cupo agotado:** detecta 402/429, aplica cooldown de 15 min y **traspasa tu sesión** al siguiente modelo.
+- **Context-relay:** si el contexto crece o un motor se corta, **compacta la conversación** y continúa en otro modelo sin perder el hilo.
 
 ---
 
-## 🧠 Modelos locales recomendados (CPU + WebGPU)
+## 🧰 Guía rápida de cada botón (sin complicaciones)
 
-| Modelo | Peso Q4 | Uso |
+| Botón | Qué hace | Cuándo usarlo |
 |---|---|---|
-| Llama-3.2-1B-Instruct | ~0.8 GB | texto rápido |
-| Qwen2.5-1.5B-Instruct | ~1.0 GB | texto equilibrado |
-| SmolLM2-1.7B-Instruct | ~1.2 GB | texto |
-| Qwen2-VL-2B-Instruct + `mmproj` | ~1.0 GB + 1.3 GB | **visión** |
-| OLMoE-1B-7B-Instruct (MoE) | ~4.0 GB | calidad MoE, velocidad de 1B |
+| `➤ / Enter` | Envía el mensaje | Siempre |
+| `🔀 Auto` (selector) | Rota proveedores/modelos solo | Por defecto; déjalo así |
+| `📂` | Carga un GGUF local (offline) | Cuando quieras privacidad total o sin internet |
+| `🐧` | Arranca/oculta la VM Linux embebida | Solo si el agente necesita `apt/npm/git` reales |
+| `🤖` | Modo agéntico (4 roles + entorno de ejecución) | Tareas que requieran razonar, probar y verificar |
+| `🔍/🌐` | Búsqueda web (Google/Bing/DDG) inyectada al modelo | Preguntas de actualidad o datos verificables |
+| `🔒/🔓` | Modo franco (tono directo, sin moralina) | Cuando quieras crudeza; combina con GGUF *abliterated* |
+| `🧠` | Ver/descargar la memoria del chat | Para auditar o respaldar conversaciones |
+| `⬇ Exportar` | MD / JSON / CSV / PDF / Word / PowerPoint | Para llevar-te la conversación |
+| `🧑 Humanizar` | Reescribe una respuesta con tono natural | Cuando una respuesta suene robótica |
+| `📎 Adjuntar` | Imágenes, texto, Word, Excel, PPT, PDF | Para analizar documentos o fotos |
+| `⏹` | Detiene la generación al instante | Si una respuesta se alarga |
+| `⚙️ Ruteo` | Proveedores, keys, Split GPU+CPU, hilos, contexto | Solo si quieres afinar (opcional) |
+| `🧙` | Wizard de configuración asistida | Opcional y repetible |
+
+**Atajos:** `Esc` cierra modales · `Ctrl+S` guarda configuración · `Shift+Enter` salto de línea.
 
 ---
 
-## 🔒 Privacidad
+## 🔑 Auto-keys (solo si quieres más potencia, opcional)
 
-- Las keys y la configuración se guardan **solo en tu navegador** (localStorage/cookie). Nada se envía a servidores propios.
-- Los GGUF locales y los entornos de ejecución nunca salen de tu máquina.
-- Sin telemetría, sin trackers, sin backend.
+Copito funciona sin keys, pero si quieres modelos más rápidos o grandes:
+1. `⚙️ Ruteo` → pulsa `🔑 Key gratis` en el proveedor (Groq, Gemini, OpenRouter…).
+2. Crea y copia tu key en la pestaña que se abre.
+3. Vuelve y pulsa `📥 Pegar`: Copito la guarda localmente, activa el proveedor y lo prueba solo.
+
+Nada de esto es obligatorio: **sin keys ya chateas al abrir.**
+
+---
+
+## 📦 Setup de componentes offline (una sola vez)
+
+```bash
+powershell -ExecutionPolicy Bypass -File setup_wllama.ps1   # runtime GGUF local
+powershell -ExecutionPolicy Bypass -File fix_wllama.ps1     # repara wasm corrupto
+powershell -ExecutionPolicy Bypass -File setup_pyodide.ps1  # Python offline con pip
+powershell -ExecutionPolicy Bypass -File setup_v86.ps1      # VM Linux embebida
+# Mac/Linux: usa los .sh equivalentes
+```
+
+Tras cada setup, el componente vive en su carpeta (`wllama/`, `pyodide/`, `v86/`) y funciona **sin internet**.
 
 ---
 
@@ -132,19 +126,19 @@ Tras cada setup, el componente queda en su carpeta (`wllama/`, `pyodide/`, `v86/
 ```
 copito/
 ├── index.html            ← la app completa (un solo archivo)
-├── sw.js                 ← Service Worker (opcional)
-├── README.md / LICENSE / .gitignore
-├── copito_server.bat     ← servidor local Windows (COOP/COEP + Range)
-├── copito_server.sh      ← servidor local Mac/Linux
-├── setup_wllama.ps1/.sh  ← runtime wllama 3.6.1
-├── fix_wllama.ps1        ← repara wasm corrupto
-├── setup_pyodide.ps1     ← Python offline (Pyodide)
-├── setup_v86.ps1         ← Linux embebido (v86)
-├── wllama/  pyodide/  v86/   ← componentes offline (tras setup)
+├── sw.js · README.md · LICENSE · .gitignore
+├── docs/img/             ← capturas
+├── copito_server.bat/.sh ← servidor local (COOP/COEP + Range)
+├── setup_wllama.* · fix_wllama.ps1 · setup_pyodide.ps1 · setup_v86.ps1
+├── wllama/ · pyodide/ · v86/   ← componentes offline (tras setup)
 └── modelos/              ← tus .gguf (NO se sube a GitHub)
 ```
 
 ---
+
+## 🔒 Privacidad
+
+Keys y configuración **solo en tu navegador**. GGUF y entornos de ejecución **nunca salen de tu máquina**. Sin telemetría ni backend.
 
 ## 📜 Licencia
 

@@ -132,6 +132,8 @@ body.light .chat-item.active{background:rgba(106,72,255,.12)}
 ::-webkit-scrollbar{width:9px;height:9px}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:6px}
 ::-webkit-scrollbar-thumb:hover{background:#3a4256}
+#v86screen{image-rendering:pixelated}
+#v86screen canvas{width:100% !important;height:100% !important}
 @media(max-width:1200px){.body{grid-template-columns:220px 1fr}}
 @media(max-width:900px){
   .body{grid-template-columns:1fr}
@@ -147,6 +149,7 @@ body.light .chat-item.active{background:rgba(106,72,255,.12)}
   #inp{min-height:44px}
   .scroll-down{bottom:100px;right:16px;width:40px;height:40px;font-size:18px}
   .sidebar-toggle{display:flex}
+  #termWrap{width:92vw;right:4vw}
 }
 @media(max-width:600px){
   .header{padding:0 8px}
@@ -174,7 +177,7 @@ body.light .chat-item.active{background:rgba(106,72,255,.12)}
     <button id="ggufLocalBtn" title="Cargar GGUF local" style="padding:6px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;font-size:13px">📂</button>
     <input type="file" id="ggufLocalInput" accept=".gguf,application/octet-stream" style="display:none">
     <button id="memoryBtn" title="Ver memoria del chat" style="padding:6px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;font-size:13px">🧠</button>
-    <button id="webvmBtn" title="Abrir entorno Linux WebVM" style="padding:6px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;font-size:13px">🐧</button>
+    <button id="webvmBtn" title="Arrancar/ver VM Linux embebido (v86)" style="padding:6px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;font-size:13px">🐧</button>
     <button id="frankBtn" class="iconbtn" title="Modo franco: respuestas directas, sin rodeos ni moralina" style="color:var(--warn)">🔒</button>
     <button id="wizardBtn" title="Rehacer configuración inicial" style="padding:6px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;font-size:13px">🧙</button>
     <button id="themeBtn" title="Cambiar tema" style="padding:6px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;font-size:13px">🌙</button>
@@ -194,7 +197,7 @@ body.light .chat-item.active{background:rgba(106,72,255,.12)}
           <input type="file" id="fileInp" accept="image/*,.pdf,.txt,.md,.js,.ts,.json,.py,.html,.css,.csv,.doc,.docx,.xls,.xlsx,.ppt,.pptx" style="display:none" multiple>
           <button id="attachBtn" class="iconbtn" style="width:auto;padding:0 12px;font-size:13px;gap:6px" title="Adjuntar imagen, texto, Word, Excel, PowerPoint o PDF">📎 Adjuntar</button>
           <button id="exportBtn" class="iconbtn" style="width:auto;padding:0 12px;font-size:13px" title="Exportar conversación">⬇ Exportar</button>
-          <button id="searchBtn" class="iconbtn" title="Activar búsqueda en internet (DDG)" style="color:var(--accent2)">🔍</button>
+          <button id="searchBtn" class="iconbtn" title="Activar búsqueda en internet (Google/Bing/DDG)" style="color:var(--accent2)">🔍</button>
           <textarea id="inp" rows="1" placeholder="Escribe un mensaje… (Enter = enviar, Shift+Enter = salto de línea)"></textarea>
           <button id="stop" title="Detener generación">⏹</button>
           <button id="send" title="Enviar">➤</button>
@@ -266,21 +269,13 @@ body.light .chat-item.active{background:rgba(106,72,255,.12)}
   </div>
 </div>
 
-<div id="webvmPanel" style="display:none;position:fixed;inset:0;z-index:120;background:var(--bg);flex-direction:column">
-  <div style="display:flex;align-items:center;gap:10px;padding:8px 14px;background:var(--bg2);border-bottom:1px solid var(--border)">
-    <b style="font-size:14px">🐧 Entorno Linux (WebVM · CheerpX · Debian)</b>
-    <span style="font-size:11px;color:var(--dim)">Tarda ~30-60 s en arrancar la primera vez · Requiere internet</span>
-    <div style="flex:1"></div>
-    <button class="testbtn" onclick="window.open('https://webvm.io','_blank')">↗ Abrir en pestaña</button>
-    <button class="testbtn" style="border-color:var(--err);color:var(--err)" onclick="document.getElementById('webvmPanel').style.display='none'">✕ Cerrar</button>
-  </div>
-  <iframe id="webvmFrame" src="about:blank" style="flex:1;border:none;background:#000" allow="cross-origin-isolated"></iframe>
-</div>
-
-<div id="termWrap" style="position:fixed;right:16px;bottom:140px;z-index:80;width:440px;max-width:92vw;display:none">
+<div id="termWrap" style="position:fixed;right:16px;bottom:140px;z-index:80;width:480px;max-width:92vw;display:none">
   <button id="termToggle" style="width:100%;text-align:left;padding:6px 12px;background:var(--bg2);border:1px solid var(--border);border-radius:10px 10px 0 0;color:var(--accent2);font-size:12px">🐧 Terminal del agente ▸</button>
-  <div id="termBody" style="display:none;background:#0b0e15;border:1px solid var(--border);border-top:none;border-radius:0 0 10px 10px;max-height:280px;overflow-y:auto;padding:10px">
+  <div id="termBody" style="display:none;background:#0b0e15;border:1px solid var(--border);border-top:none;border-radius:0 0 10px 10px;max-height:340px;overflow-y:auto;padding:10px">
     <pre id="termLog" style="font-family:ui-monospace,monospace;font-size:11px;color:#c3e88d;white-space:pre-wrap;margin:0"></pre>
+    <div id="v86wrap" style="display:none;margin-top:8px;border:1px solid var(--border);border-radius:6px;overflow:hidden">
+      <div id="v86screen" style="width:100%;height:300px;background:#000"></div>
+    </div>
   </div>
 </div>
 <script>
@@ -397,7 +392,6 @@ const $=id=>document.getElementById(id);
 const chatEl=$('chat'),inp=$('inp'),sendBtn=$('send'),stopBtn=$('stop'),spinner=$('spinner'),statusEl=$('status'),routeInfo=$('routeInfo'),modelSel=$('modelSel'),chatList=$('chatList'),fileInp=$('fileInp'),attachBtn=$('attachBtn'),searchBtn=$('searchBtn'),scrollDownBtn=$('scrollDown');
 let isBusy=false,stopCtrl=null,pendingFiles=[],chatStartTime=0,searchCache={},searchMode=false,searchCtrl=null;
 let stickToBottom=true;
-let stopBigBtn=null;
 let frankMode=false;
 
 function setStatus(t,err){statusEl.textContent=t;statusEl.style.color=err?'var(--err)':'var(--dim)';overlayHook(t,err);}
@@ -2104,6 +2098,7 @@ function termLog(line, cls){
 function toggleTerm(){
   termOpen = !termOpen;
   $('termBody').style.display = termOpen ? 'block' : 'none';
+  if(vmReady) $('v86wrap').style.display = termOpen ? 'block' : 'none';
   $('termToggle').textContent = termOpen ? '🐧 Terminal del agente ▾' : '🐧 Terminal del agente ▸';
 }
 
@@ -2147,7 +2142,7 @@ function bashSim(cmdline){
   const path = rest[0] || '.';
   switch(cmd){
     case '': return '';
-    case 'help': return 'Comandos disponibles: ls cd pwd cat echo mkdir touch rm cp mv find grep head tail wc date env whoami uname ps clear help\nPara apt/npm/git reales: usa 🐧 WebVM (requiere internet). Para pip: usa python con micropip.';
+    case 'help': return 'Comandos disponibles: ls cd pwd cat echo mkdir touch rm cp mv find grep head tail wc date env whoami uname ps clear help\nPara apt/npm/git reales: usa el VM Linux (🐧) si está arrancado.';
     case 'pwd': return '/' + simCWD.join('/');
     case 'whoami': return 'copito-agent';
     case 'uname': return 'CopitoSim 1.0 (sandbox JavaScript, no es un kernel real)';
@@ -2237,11 +2232,11 @@ function bashSim(cmdline){
       const words = node.content.split(/\s+/).filter(Boolean).length;
       return lines + ' ' + words + ' ' + node.content.length + ' ' + path;
     }
-    case 'apt': case 'apt-get': return '[simulado] apt no está disponible aquí. Para paquetes Debian reales usa 🐧 WebVM (online).';
-    case 'npm': return '[simulado] npm no está disponible aquí. Para Node real usa 🐧 WebVM (online).';
-    case 'git': return '[simulado] git no está disponible aquí. Para git real usa 🐧 WebVM (online).';
+    case 'apt': case 'apt-get': return vmReady ? '[delegado al VM]' : '[simulado] apt no está disponible aquí. Arranca el VM Linux (🐧) para paquetes reales.';
+    case 'npm': return vmReady ? '[delegado al VM]' : '[simulado] npm no está disponible aquí. Arranca el VM Linux (🐧) para Node real.';
+    case 'git': return vmReady ? '[delegado al VM]' : '[simulado] git no está disponible aquí. Arranca el VM Linux (🐧) para git real.';
     case 'pip': return '[simulado] usa python con micropip:  python -m micropip.install("paquete")  (requiere Pyodide).';
-    case 'wget': case 'curl': return isOnline() ? '[simulado] descarga no implementada; el contenido real requiere WebVM.' : '[sin red] wget/curl requieren conexión; usa 🐧 WebVM.';
+    case 'wget': case 'curl': return isOnline() ? '[simulado] descarga no implementada; el contenido real requiere el VM Linux.' : '[sin red] wget/curl requieren conexión; usa el VM Linux (🐧).';
     default: return 'sh: comando no encontrado: ' + cmd + '  (prueba "help")';
   }
 }
@@ -2300,18 +2295,102 @@ async function sandboxPip(pkgs){
   }
 }
 
+/* --- VM Linux embebido (v86) con control total del agente por serial --- */
+let emulator = null, vmReady = false, vmBuf = '', vmWake = null, vmBooting = false;
+
+function vmAppend(chunk){
+  vmBuf += chunk;
+  if(vmWake) vmWake();
+}
+function vmWaitFor(re, timeout){
+  return new Promise(function(resolve, reject){
+    const t0 = Date.now();
+    (function check(){
+      if(re.test(vmBuf)) return resolve(true);
+      if(Date.now() - t0 > (timeout || 60000)) return resolve(false);
+      vmWake = function(){ vmWake = null; setTimeout(check, 30); };
+    })();
+  });
+}
+async function vmBoot(){
+  if(vmReady || vmBooting) return vmReady;
+  vmBooting = true;
+  setStatus('🐧 arrancando VM Linux embebido…', false);
+  try{
+    if(!window.V86) await loadScript('./v86/libv86.js');
+    if(!window.V86) throw new Error('libv86.js no cargó (ejecuta setup_v86.ps1)');
+    emulator = new V86({
+      wasm_path: './v86/v86.wasm',
+      memory_size: 256 * 1024 * 1024,
+      vga_memory_size: 8 * 1024 * 1024,
+      screen_container: document.getElementById('v86screen'),
+      bios: { url: './v86/bios/seabios.bin' },
+      vga_bios: { url: './v86/bios/vgabios.bin' },
+      cdrom: { url: './v86/images/buildroot.iso' },
+      autostart: true,
+      disable_keyboard: true,
+      disable_mouse: true
+    });
+    emulator.add_listener('serial0-output', function(e){
+      vmAppend((e && e.data) ? e.data : String(e));
+    });
+    for(let i = 0; i < 3; i++){
+      const gotLogin = await vmWaitFor(/login:\s*$/ , 45000);
+      if(gotLogin){ emulator.serial0_send_data('root\n'); vmBuf = ''; }
+      else break;
+    }
+    const ok = await vmWaitFor(/[#\$]\s*$/, 60000);
+    if(!ok) throw new Error('el VM no mostró prompt (revisa la imagen)');
+    vmBuf = '';
+    vmReady = true;
+    setStatus('🐧 VM Linux listo (control total del agente)', false);
+    termLog('[vm] Linux embebido arrancado y listo', 'cmd');
+  }catch(e){
+    vmReady = false;
+    setStatus('🐧 VM no disponible: ' + (e.message || e), true);
+  }finally{
+    vmBooting = false;
+  }
+  return vmReady;
+}
+
+async function vmExec(cmd, timeout){
+  if(!vmReady) throw new Error('VM no arrancado');
+  const marker = '__COPITO_' + Math.random().toString(36).slice(2) + '__';
+  vmBuf = '';
+  emulator.serial0_send_data(cmd + '\n');
+  emulator.serial0_send_data('echo ' + marker + '_$?\n');
+  const seen = await vmWaitFor(new RegExp(marker + '_\\d+'), timeout || 30000);
+  const out = vmBuf;
+  vmBuf = '';
+  if(!seen) return '[timeout esperando respuesta del VM]\n' + out.slice(0, 1500);
+  const lines = out.split('\n');
+  const endIdx = lines.findIndex(function(l){ return l.indexOf(marker + '_') === 0; });
+  const body = (endIdx > 0 ? lines.slice(1, endIdx) : lines.slice(1)).join('\n');
+  const rc = (out.match(new RegExp(marker + '_(\\d+)')) || [])[1];
+  return body + (rc && rc !== '0' ? '\n[código de salida: ' + rc + ']' : '');
+}
+
+async function vmExecBlock(code){
+  const lines = code.split('\n').filter(function(l){ return l.trim() && !l.trim().startsWith('#'); });
+  const outs = [];
+  for(const ln of lines){
+    outs.push('$ ' + ln + '\n' + (await vmExec(ln)));
+  }
+  return outs.join('\n');
+}
+
 /* --- Ejecutar según lenguaje, logueando al terminal colapsable --- */
 async function sandboxExec(lang, code){
   termLog((lang === 'bash' ? '' : '# ' + lang + '\n') + code.slice(0, 500), 'cmd');
   let out;
   if(lang === 'bash'){
-    const lines = code.split('\n');
-    const outs = [];
-    for(const ln of lines){
-      if(!ln.trim() || ln.trim().startsWith('#')) continue;
-      outs.push(bashSim(ln));
+    if(vmReady){
+      try{ out = await vmExecBlock(code); }
+      catch(e){ out = '[vm falló: ' + (e.message||e) + '] usando simulador:\n' + code.split('\n').map(function(l){ return (l.trim() && !l.trim().startsWith('#')) ? bashSim(l) : ''; }).join('\n'); }
+    }else{
+      out = code.split('\n').map(function(l){ return (l.trim() && !l.trim().startsWith('#')) ? bashSim(l) : ''; }).join('\n');
     }
-    out = outs.join('\n');
   }else if(lang === 'python'){
     try{ out = await sandboxRunPython(code); }
     catch(e){ out = '[pyodide no disponible] ' + (e.message || e); }
@@ -3021,7 +3100,7 @@ async function humanizeText(btn){
   }).catch(function(e){});
 })();
 
-/* ===== MODO AGÉNTICO 🤖 (4 roles + loop autónomo de sandbox) ===== */
+/* ===== MODO AGÉNTICO 🤖 (4 roles + loop autónomo de entornos) ===== */
 let agentMode = false;
 function agentWarnIfSlow(){
   const combos = orderCombos('', '');
@@ -3044,17 +3123,22 @@ async function agentCall(systemPrompt, userText, sig){
 const ENV_CAPS = 'ENTORNOS DE EJECUCIÓN DISPONIBLES:\n' +
   '- javascript: SIEMPRE disponible (offline). Usa console.log() para mostrar resultados.\n' +
   '- python: disponible si hay Pyodide (carpeta local ./pyodide/ o internet). Puedes usar micropip.install("paquete") para librerías pure-python.\n' +
-  '- bash: SIMULADO offline (ls, cd, pwd, cat, echo, mkdir, touch, rm, cp, mv, find, grep, head, tail, wc, date, env). NO tiene apt/npm/git reales.\n' +
-  'Si la tarea requiere apt, npm, git o binarios reales, DÍLO claramente en tu respuesta y sugiere usar 🐧 WebVM (online). Elige el lenguaje más adecuado y devuelve SOLO el código en un bloque ``` .';
+  '- bash: Linux REAL embebido (v86) si el VM está arrancado (🐧); incluye sh y utilidades busybox, y apt/npm/git si tu imagen los trae. Si el VM no está arrancado, hay un bash SIMULADO offline básico (ls, cat, echo, mkdir, grep…).\n' +
+  'Elige el lenguaje más adecuado y devuelve SOLO el código en un bloque ``` . Si la tarea requiere algo que ningún entorno soporta, dilo claramente.';
 
 async function runAgentic(text, webNote){
   if(agentWarnIfSlow()){
-    const ok = confirm('⚠️ MODO AGÉNTICO CON GGUF EN CPU\n\nEl modo agéntico encadena varias llamadas al modelo por cada mensaje (orquestador + prompt + resolvedor + evaluador + entorno). Con un GGUF en CPU cada llamada puede tardar varios minutos y el ciclo completo podría demorar MUCHO o no terminar.\n\nRecomendado solo con: GPU WebGPU (🎮), Split (🧩) o endpoints rápidos con key gratis.\n\n¿Continuar de todos modos?');
+    const ok = confirm('⚠️ MODO AGÉNTICO CON GGUF EN CPU\n\nEl modo agéntico encadena varias llamadas al modelo por cada mensaje (orquestador + prompt + resolvedor + entorno + evaluador). Con un GGUF en CPU cada llamada puede tardar varios minutos y el ciclo completo podría demorar MUCHO o no terminar.\n\nRecomendado solo con: GPU WebGPU (🎮), Split (🧩) o endpoints rápidos con key gratis.\n\n¿Continuar de todos modos?');
     if(!ok){
       setStatus('🤖 ciclo agéntico cancelado (GGUF en CPU es demasiado lento)', true);
       return;
     }
   }
+  // Arranca el VM en segundo plano si la tarea lo requiere (no bloquea)
+  if(agentNeedsEnv(text) && !vmReady && !vmBooting){
+    vmBoot();
+  }
+
   let plan = '';
   setStatus('🤖 agente 1/4: orquestador…', false);
   try{ plan = await agentCall('Eres un orquestador. Descompón la tarea del usuario en máximo 4 pasos breves y di qué perfil de experto la resuelve, y si requiere ejecutar código o pruebas. Sé conciso.', text, null); }catch(e){ plan = ''; }
@@ -3068,7 +3152,7 @@ async function runAgentic(text, webNote){
   setStatus('🤖 agente 3/4: resolvedor…', false);
   await runChat(refined, null);
 
-  // Loop autónomo de ejecución en el sandbox (si la tarea lo requiere)
+  // Loop autónomo de ejecución en el sandbox/VM (si la tarea lo requiere)
   let lastExecOut = '';
   if(agentNeedsEnv(text) || agentNeedsEnv(refined) || /código|ejecut|prueb/i.test(plan)){
     for(let iter = 0; iter < 2; iter++){
@@ -3076,7 +3160,7 @@ async function runAgentic(text, webNote){
       let codeTxt = '';
       try{
         codeTxt = await agentCall(
-          'Eres un ingeniero de pruebas. ' + ENV_CAPS + '\n\nEscribe SOLO un bloque de código ejecutable que resuelva o VERIFIQUE el objetivo, con salidas visibles (console.log / print). Devuelve únicamente el código dentro de ``` . Sin explicaciones.',
+          'Eres un ingeniero de pruebas. ' + ENV_CAPS + '\n\nEscribe SOLO un bloque de código ejecutable que resuelva o VERIFIQUE el objetivo, con salidas visibles (console.log / print / salida de shell). Devuelve únicamente el código dentro de ``` . Sin explicaciones.',
           refined + (iter > 0 ? ('\n\nLa ejecución anterior dio este resultado, CORRIGE si falló:\n' + lastExecOut) : ''),
           null
         );
@@ -3089,7 +3173,7 @@ async function runAgentic(text, webNote){
       let conclusion = '';
       try{
         conclusion = await agentCall(
-          'Dado el objetivo y la SALIDA de ejecución de abajo, responde al usuario con el resultado final verificado y una explicación breve. Si la salida muestra un error, corrige mentalmente y da la solución correcta. Si el entorno no soporta algo (apt/npm/git), dilo y sugiere 🐧 WebVM.',
+          'Dado el objetivo y la SALIDA de ejecución de abajo, responde al usuario con el resultado final verificado y una explicación breve. Si la salida muestra un error, corrige mentalmente y da la solución correcta. Si el entorno no soporta algo (apt/npm/git sin VM), dilo y sugiere arrancar 🐧.',
           'OBJETIVO:\n' + refined + '\n\nSALIDA DE EJECUCIÓN (' + ex.lang + '):\n' + lastExecOut,
           null
         );
@@ -3101,7 +3185,7 @@ async function runAgentic(text, webNote){
         persist();
         autoScroll();
       }
-      if(!/error|exception|traceback|undefined is not|no encontrado/i.test(lastExecOut)) break;
+      if(!/error|exception|traceback|undefined is not|no encontrado|not found/i.test(lastExecOut)) break;
     }
   }
 
@@ -3231,14 +3315,15 @@ function boot(){
     if(choice && fmts.indexOf(choice) !== -1) exportChat(choice);
   };
 
-  $('webvmBtn').onclick = function(){
-    const panel = $('webvmPanel');
-    const fr = $('webvmFrame');
-    if(panel.style.display === 'none'){
-      if(fr.src === 'about:blank' || !fr.src) fr.src = 'https://webvm.io/';
-      panel.style.display = 'flex';
-    }else{
-      panel.style.display = 'none';
+  // 🐧 arranca el VM Linux embebido y muestra/oculta su pantalla en el terminal colapsable
+  $('webvmBtn').onclick = async function(){
+    if(!vmReady && !vmBooting){
+      await vmBoot();
+    }
+    if(vmReady){
+      termShow();
+      if(!termOpen) toggleTerm();
+      $('v86wrap').style.display = ($('v86wrap').style.display === 'none') ? 'block' : 'none';
     }
   };
 
@@ -3391,7 +3476,7 @@ function boot(){
     if(pathAutofixed) fixes.push('ruta /chat/completions corregida');
     setStatus('⚠️ Corregidas: ' + fixes.join(' y '), false);
   }else{
-    setStatus('listo — sin key: Pollinations + AI Horde + Wllama (GGUF) + sandbox', false);
+    setStatus('listo — sin key: Pollinations + AI Horde + Wllama (GGUF) + sandbox/VM', false);
   }
   autoScroll();
 }
