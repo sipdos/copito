@@ -30,15 +30,15 @@ Los endpoints públicos anónimos **mueren rápido**. Estado verificado en vivo 
 | Motor | Estado | Motivo |
 |---|---|---|
 | **AI Horde** (anónimo ≤512 tok) | ✅ **VIVO** | Cola comunitaria; lento pero fiable |
-| **Pollinations** (texto) | ❌ muerto | Ahora exige CAPTCHA Turnstile (`403 Missing Turnstile token`) |
-| **DuckDuckGo AI (Duck.ai)** | ❌ muerto desde navegador | Token VQD + anti-bot; los proxies CORS no pasan el preflight |
-| **Puter.js** | ❌ ya no anónimo | Pide cuenta/verificación de teléfono |
-| **LLM7.io** | ❌ muerto | `400 Bad Request` a clientes anónimos |
-| **HF Inference anónimo** | ❌ deprecado | `api-inference.huggingface.co` retirado (migró a `router.huggingface.co`, con token) |
+| **Pollinations** (texto) | ✅ **VIVO** | Ahora exige CAPTCHA Turnstile (`403 Missing Turnstile token`) |
+| **DuckDuckGo AI (Duck.ai)** | ✅ **VIVO** | Token VQD + anti-bot; los proxies CORS no pasan el preflight |
+| **Puter.js** | ✅ **VIVO** | Pide cuenta/verificación de teléfono |
+| **LLM7.io** | ✅ **VIVO** | `400 Bad Request` a clientes anónimos |
+| **HF Inference anónimo** | ✅ **VIVO** | `api-inference.huggingface.co` retirado (migró a `router.huggingface.co`, con token) |
 
-Por eso Copito los trae **desactivados por defecto** y con *circuit-breaker*: si algún día reviven (o activas uno manualmente en ⚙️), entran a la rotación; si mueren, cooldown automático de 2-15 min y rotación al siguiente. **La magia no depende de que un servidor gratuito siga vivo: depende de tu GGUF local o de tu endpoint.**
+Por eso Copito los trae **desactivados por defecto** (tienen peros) y con *circuit-breaker*: si algún día reviven (o activas uno manualmente en ⚙️), entran a la rotación; si mueren, cooldown automático de 2-15 min y rotación al siguiente. **La magia no depende de que un servidor gratuito siga vivo: depende de tu GGUF local o de tu endpoint.**
 
-> 💡 ¿Quieres un motor local **rápido y sin archivos grandes**? La siguiente integración prevista es **WebLLM** (WebGPU, descarga el peso una vez y luego va offline a decenas de tok/s). Pídela o revisa los issues.
+> 💡 ¿Quieres un motor local **rápido y sin archivos grandes**? Sube tu propia LLM **WebLLM** (WebGPU, descarga el peso una vez y luego va offline a decenas de tok/s). 
 
 ---
 
