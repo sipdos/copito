@@ -148,7 +148,7 @@ Inferencia en **CPU**, **WebGPU** o **🧩 Split GPU+CPU** (capas repartidas, `n
 
 ---
 
-## 📦 Setup de componentes offline (una sola vez)
+## 📦 Setup de componentes offline (una sola vez, solo si no tienes wllama o quieres VM)
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\setup_wllama.ps1    # runtime GGUF local (wllama 3.6.1)
