@@ -158,7 +158,7 @@ powershell -ExecutionPolicy Bypass -File .\setup_v86.ps1       # VM Linux embebi
 ```
 (Mac/Linux: equivalentes `.sh`.) Tras cada setup, el componente vive en su carpeta y funciona **sin internet**.
 
-### Servir Copito (importante)
+### Server Copito (importante, abres solo con esto)
 ```bash
 copito_server.bat      # Windows → http://localhost:8080
 ./copito_server.sh     # Mac/Linux
